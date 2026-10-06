@@ -41,15 +41,12 @@
 
   /* ---- forced-order toggle ---- */
   .orderrow { display: flex; justify-content: center; align-items: center; gap: 18px; margin-bottom: 20px; }
-  .orderrow .sep { width: 1px; align-self: stretch; background: #3a3a3a; }
   .orderrow button {
     background: none; border: 0; color: #9e9e9e; font-size: 14px;
     cursor: pointer; font-family: inherit; padding: 4px 8px;
   }
   .orderrow button b { color: #fff; }
   .orderrow button:hover { color: #fff; }
-  .orderrow .arrows { color: #4a90e2; font-size: 16px; letter-spacing: 2px; }
-
   /* ---- hero row: PLAY QUIZ + Learn + Score + Timer ---- */
   .hero { display: flex; align-items: center; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
   #playBtn {
@@ -153,6 +150,7 @@
   table.sheet.mcqt th, table.sheet.mcqt td { border: 0; border-radius: 12px; }
   table.sheet.mcqt td.hintcell { width: 56px; background: #4a90e2; color: #fff; font-weight: 800; font-size: 17px; }
   table.sheet.mcqt td.mcoptcell { border: 1px solid #000; }
+  table.sheet.missed-only { max-width: 640px; margin: 0 auto 8px; }
 
   /* ---- fill-in grid tables (like the doc) ---- */
   .tablewrap { overflow-x: auto; border-radius: 12px; }
@@ -182,10 +180,8 @@
 
   <div class="groupbar"><div class="seg" id="groupseg"></div></div>
   <div class="tabs" id="tabs"></div>
-  <div class="orderrow">
-    <button id="orderToggle" title="Toggle forced order"><span class="arrows">↓↑</span> Forced Order: <b id="orderState">ON</b></button>
-    <span class="sep" id="dirSep" style="display:none"></span>
-    <button id="dirToggle" title="Flip quiz direction" style="display:none">⇄ <b id="dirState">Latin → English</b></button>
+  <div class="orderrow" id="orderrow" style="display:none">
+    <button id="dirToggle" title="Flip quiz direction">⇄ <b id="dirState">Latin → English</b></button>
   </div>
 
   <div class="hero">
@@ -383,7 +379,6 @@ let current = "puella";
 let total = 10;
 let playing = false, learning = false;
 let filled = [], score = 0, secs = 180, timerId = null;
-let forcedOrder = true;
 let selCh = new Set([1]);
 let vocabMode = "mc";
 let vocabTime = "auto";
@@ -394,7 +389,6 @@ const TOTALV = [1,2,3,4,5,6,7,8].reduce((a,c)=>a+VOCAB[c].length,0);
 const $ = id => document.getElementById(id);
 const norm = s => s.trim().toLowerCase().replace(/ā/g,"a").replace(/ē/g,"e").replace(/ī/g,"i").replace(/ō/g,"o").replace(/ū/g,"u");
 const splitAlt = a => [norm(a), ...norm(a).split(",").map(s=>s.trim()).filter(Boolean)];
-const matchesAny = (d, v) => d.answers.some(a => splitAlt(a).includes(v));
 const fmt = s => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
 
 // group switcher + quiz picker (only the active group's quizzes shown)
@@ -484,8 +478,7 @@ function select(k){
   current = k;
   if (DATA[k].vocab) applyDir(DATA[k]);
   total = DATA[k].hints.length;
-  $("dirToggle").style.display = DATA[k].vocab ? "" : "none";
-  $("dirSep").style.display = DATA[k].vocab ? "" : "none";
+  $("orderrow").style.display = "none";
   updateHeroLabels();
   document.querySelectorAll("#tabs button.tab").forEach(b => b.classList.toggle("active", b.dataset.quiz === k));
   learning = false; $("learnBtn").classList.remove("active");
@@ -515,16 +508,10 @@ function updateNowQ(){
   const remaining = filled.filter(f => f !== true).length;
   if (remaining === 0){ el.style.display = "none"; return; }
   el.style.display = "block";
-  if (forcedOrder){
-    const h = d.hints[nextIndex()];
-    const q = d.vocab ? h : `${d.title} · ${h}`;
-    el.innerHTML = `${escapeHtml(q)} <span class="qarrow">→ ?</span>`;
-  } else {
-    el.innerHTML = `${remaining} left <span class="qarrow">— type any!</span>`;
-  }
+  el.innerHTML = `${remaining} left <span class="qarrow">— type any!</span>`;
 }
 function gridListHTML(d){
-  const nx = (playing && forcedOrder) ? nextIndex() : -1;
+  const nx = -1;
   let html = `<table class="sheet"><tr><th style="width:40%">Hint</th><th style="width:60%">${d.title}</th></tr><tbody>`;
   d.hints.forEach((h,i) => {
     let cls = "answercell", txt = "";
@@ -542,7 +529,7 @@ function renderList(d){
 }
 function renderMatrix(d){
   const C = d.cols.length;
-  const nx = (playing && forcedOrder) ? nextIndex() : -1;
+  const nx = -1;
   let html = `<table class="sheet grid"><tr><th colspan="${C+1}">${d.title}</th></tr>`;
   if (d.colGroups) {
     const runs = [];
@@ -565,7 +552,6 @@ function renderMatrix(d){
   });
   $("tablewrap").innerHTML = html + `</table>`;
 }
-function nextIndex(){ return filled.findIndex(f => f !== true); }
 
 function startGridGame(){
   learning = false; $("learnBtn").classList.remove("active");
@@ -577,7 +563,7 @@ function startGridGame(){
   $("answerWrap").style.display = "block"; $("giveupRow").style.display = "flex";
   const inp = $("answer"); inp.disabled = false; inp.value = "";
   $("submitBtn").disabled = false;
-  $("hint").className = ""; $("hint").textContent = forcedOrder ? "Forced order — type the top answer, press Enter!" : "Any order goes — type a form, press Enter!";
+  $("hint").className = ""; $("hint").textContent = "Any order goes — type a form, press Enter!";
   $("score").textContent = `0/${total}`;
   renderGrid(); tick();
   timerId = setInterval(tick, 1000);
@@ -590,18 +576,27 @@ function tick(){
   if (secs <= 0) { mcActive ? endMC(false, false) : endGame(false); return; }
   secs--;
 }
+function missedTableHTML(d, idxs){
+  if (!idxs.length) return "";
+  let html = `<table class="sheet missed-only"><tr><th style="width:40%">Missed</th><th style="width:60%">Answer</th></tr><tbody>`;
+  idxs.forEach(i=>{
+    html += `<tr><td class="hintcell">${d.hints[i]}</td><td class="answercell missed"><span class="celltext">${d.answers[i]}</span></td></tr>`;
+  });
+  return html + `</tbody></table>`;
+}
 function endGame(won, silent){
   stopTimer(); playing = false;
+  $("nowQ").style.display = "none";
   $("answer").disabled = true; $("submitBtn").disabled = true;
   $("playBtn").disabled = false; updateHeroLabels();
   $("giveupRow").style.display = "none";
   $("tabs").classList.remove("locked");
   if (!silent) {
-    filled = filled.map(f => f === true ? true : "missed");
+    const missedIdx = filled.map((f,i) => f === true ? null : i).filter(x => x !== null);
     $("timer").textContent = fmt(Math.max(secs,0));
-    renderGrid();
+    $("tablewrap").innerHTML = missedTableHTML(DATA[current], missedIdx);
     $("hint").className = won ? "good" : "";
-    $("hint").textContent = won ? `🏆 Perfect! ${total}/${total} ${timeLeft()}!` : `Time! You got ${score}/${total} — missed answers in red.`;
+    $("hint").textContent = won ? `🏆 Perfect! ${total}/${total} ${timeLeft()}!` : `Time! You got ${score}/${total} — missed answers below.`;
   }
 }
 $("playBtn").onclick = () => {
@@ -630,11 +625,7 @@ function resetGridSilent(){
   if (!learning) { $("hint").className = ""; $("hint").textContent = ""; }
   renderGrid();
 }
-$("orderToggle").onclick = () => {
-  forcedOrder = !forcedOrder;
-  $("orderState").textContent = forcedOrder ? "ON" : "OFF";
-  if (playing) { $("hint").textContent = forcedOrder ? "Forced order — type the top answer, press Enter!" : "Any order goes — type a form, press Enter!"; renderGrid(); }
-};
+// (forced order removed — all quizzes accept answers in any order)
 $("dirToggle").onclick = () => {
   vocabDir = vocabDir === "la-en" ? "en-la" : "la-en";
   $("dirState").textContent = vocabDir === "la-en" ? "Latin → English" : "English → Latin";
@@ -651,23 +642,7 @@ function submitAnswer(){
   const raw = inp.value.trim(), v = norm(raw);
   if (!v) { $("hint").className = "bad"; $("hint").textContent = "Type something first, then press Enter!"; return; }
   const d = DATA[current];
-  if (forcedOrder) {
-    const i = nextIndex();
-    if (i === -1) return;
-    if (splitAlt(d.answers[i]).includes(v)) {
-      filled[i] = true; score++;
-      inp.value = "";
-      $("score").textContent = `${score}/${total}`;
-      $("hint").className = "good"; $("hint").textContent = `✅ ${d.answers[i]}`;
-      renderGrid();
-      if (score === total) endGame(true);
-    } else {
-      $("hint").className = "bad";
-      $("hint").textContent = matchesAny(d, v)
-        ? `Not yet — forced order! "${raw}" goes in a later row.`
-        : `❌ "${raw}" isn't right — try again.`;
-    }
-  } else {
+  {
     const i = d.answers.findIndex((a,idx) => filled[idx] !== true && splitAlt(a).includes(v));
     if (i !== -1) {
       filled[i] = true; score++;
@@ -712,8 +687,7 @@ function buildCustom(){
 function selectVocab(){
   learning = false; $("learnBtn").classList.remove("active");
   buildCustom();
-  $("dirToggle").style.display = "";
-  $("dirSep").style.display = "";
+  $("orderrow").style.display = "";
   updateHeroLabels();
   resetGrid();
 }
@@ -721,7 +695,7 @@ function startMC(){
   buildCustom();
   learning = false; $("learnBtn").classList.remove("active");
   const order = DATA.vcustom.pairs.map((_,i)=>i);
-  if (!forcedOrder) shuffleInPlace(order);
+  shuffleInPlace(order);
   mc = { order, pos:0, score:0, total:order.length, answered:false, opts:[], correct:"", prompt:"", pair:0 };
   total = mc.total; score = 0; filled = Array(total).fill(false);
   { const lim = resolveTime(total); noTimer = (lim === null); secs = noTimer ? 0 : lim; }
@@ -754,7 +728,7 @@ function renderMC(){
     html += `<tr><td class="hintcell">${letters[k]}</td><td class="mcoptcell" onclick="answerMC(${k})"><span class="celltext">${escapeHtml(o)}</span></td></tr>`;
   });
   html += `</tbody></table>`;
-  $("tablewrap").innerHTML = html + gridListHTML(d);
+  $("tablewrap").innerHTML = html;
 }
 function answerMC(k){
   if (!playing || !mcActive || mc.answered) return;
@@ -780,18 +754,19 @@ function answerMC(k){
 }
 function endMC(finished, silent){
   stopTimer(); playing = false; mcActive = false;
+  $("nowQ").style.display = "none";
   $("playBtn").disabled = false; updateHeroLabels();
   $("giveupRow").style.display = "none";
   $("tabs").classList.remove("locked");
   if (silent) return;
-  filled = filled.map(f => f === true ? true : "missed");
+  const missedIdx = filled.map((f,i) => f === true ? null : i).filter(x => x !== null);
   const pct = Math.round(mc.score/mc.total*100);
   $("timer").textContent = fmt(Math.max(secs,0));
   $("hint").className = finished && mc.score === mc.total ? "good" : "";
   $("hint").textContent = finished
     ? (mc.score === mc.total ? `🏆 Perfect! ${mc.total}/${mc.total} ${timeLeft()}!` : `Done! You got ${mc.score}/${mc.total} (${pct}%)`)
-    : `Stopped. You got ${mc.score}/${mc.total} — missed answers in red.`;
-  $("tablewrap").innerHTML = gridListHTML(DATA.vcustom) + `<div class="btnrow"><button onclick="startMC()">Retry Test</button></div>`;
+    : `Stopped. You got ${mc.score}/${mc.total} — missed answers below.`;
+  $("tablewrap").innerHTML = missedTableHTML(DATA.vcustom, missedIdx) + `<div class="btnrow"><button onclick="startMC()">Retry Test</button></div>`;
 }
 renderGroupbar();
 renderQuizTabs();
