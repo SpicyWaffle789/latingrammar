@@ -537,6 +537,7 @@ function gridListHTML(d){
   return html + `</tbody></table>`;
 }
 function renderList(d){
+  if (playing && !learning && d.vocab){ $("tablewrap").innerHTML = ""; return; }
   $("tablewrap").innerHTML = gridListHTML(d);
 }
 function renderMatrix(d){
