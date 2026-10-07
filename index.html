@@ -528,7 +528,9 @@ function updateNowQ(){
 }
 function gridListHTML(d){
   const nx = -1;
-  let html = `<table class="sheet"><tr><th style="width:40%">Hint</th><th style="width:60%">${d.title}</th></tr><tbody>`;
+  const leftH = d.vocab ? (vocabDir === "la-en" ? "Latin" : "English word") : "Hint";
+  const rightH = d.vocab ? (vocabDir === "la-en" ? "English word" : "Latin") : d.title;
+  let html = `<table class="sheet"><tr><th style="width:40%">${leftH}</th><th style="width:60%">${rightH}</th></tr><tbody>`;
   d.hints.forEach((h,i) => {
     let cls = "answercell", txt = "";
     if (learning) { txt = d.answers[i]; }
