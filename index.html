@@ -157,11 +157,6 @@
   .mcopt:disabled { cursor: default; }
   .mcopt.right { background: #1b5e20; }
   .mcopt.wrong { background: #7f1d1d; }
-  .mcfinish {
-    background: #3a4046; border: 0; color: #fff; font-size: 20px;
-    padding: 16px; border-radius: 12px; cursor: pointer; font-family: inherit; margin-top: 4px;
-  }
-  .mcfinish:hover { background: #4a5158; }
   table.sheet.missed-only { max-width: 640px; margin: 0 auto 8px; }
 
   /* ---- fill-in grid tables (like the doc) ---- */
@@ -256,6 +251,41 @@ const VOCAB = {
 8: [["abeō","go away"],["adeō","go to, approach"],["appropinquō","approach, come near to"],["clāmor","shout, shouting, noise"],["conveniō","come together, gather, meet"],["cupiō","want, desire"],["ego","I, me"],["enim","for"],["epistula","letter"],["exeō","go out from, go away"],["ferōx","fierce, ferocious"],["frūstrā","in vain"],["ineō","go into, enter"],["labōrō","work, toil"],["legō","read, choose"],["liber","book"],["longus","long"],["magis","more"],["magister","teacher"],["maior","bigger, larger, greater"],["maximē","very greatly"],["maximus","greatest, largest, biggest"],["medius","middle"],["melior","better"],["minimus","smallest, least"],["minor","smaller, less"],["nōbilis","of noble birth, renowned"],["nōs","we, us"],["nōtus","famous, well known"],["optimus","best"],["peior","worse"],["pereō","die, perish"],["pessimus","worst"],["plūrēs","more"],["plūrimus","most, very many"],["plūs","more"],["quam","than, how, as ... as possible"],["redeō","go back, come back, return"],["scrībō","write"],["sē","himself, herself, itself, themselves"],["senex","old man"],["stultus","stupid, foolish"],["trānseō","go over, cross"],["tū","you"],["vir","man, husband"],["vōs","you all, you"]]
 };
 
+// ---------- significant people: [name, chapters, latin form, description] ----------
+const PEOPLE = [
+["Aeneas","2,3,4,6","Aeneae, m","The mythical father of the Roman race and hero of Virgil's epic poem, the Aeneid."],
+["Augustus","4","Augusti, m","The first Roman emperor (1st century BC)."],
+["Cacus","4","Caci, m","A mythical monster that terrified the early inhabitants of Italy."],
+["Caesar","6","Caesaris, m","Julius Caesar, Rome's most famous general, was appointed Dictator but murdered for allegedly wanting to be king (1st century BC)."],
+["Cerberus","4","Cerberi, m","The mythical guard dog of the Underworld."],
+["Cloelia","2","Cloeliae, f","A daring young woman held hostage by the Etruscan king Porsena managed to escape (6th century BC)."],
+["Cumae","6","Cumarum, f pl","An ancient settlement near Naples and home to the Sibyl's cave."],
+["Evander","4","Evandri, m","A mythical Greek exile and ruler of the territory that would become the city of Rome."],
+["Fabius","4","Fabii, m","Quintus Fabius Maximus was a distinguished noble and Dictator in the wars against Hannibal (3rd century BC)."],
+["Hannibal","4","Hannibalis, m","A Carthaginian noble and Rome's greatest enemy (3rd century BC)."],
+["Hercules","4","Herculis, m","A Greek mythical hero who travelled to the site that would one day be Rome."],
+["Horatius","2","Horatii, m","Horatius Cocles, the Roman hero who defended the bridge over the river Tiber against Porsena's army (6th century BC)."],
+["Ianus","3","Iani, m","Janus, the Roman god of beginnings and endings, entrances and exits."],
+["Iuno","1","Iunonis, f","Juno, queen of the gods."],
+["Iuppiter","1","Iovis, m","Jupiter, king of the gods."],
+["Marius","6","Marii, m","A famous Roman noble who became consul 7 times (2nd century BC)."],
+["Mars","1","Martis, m","God of war."],
+["Minerva","1","Minervae, f","Goddess of wisdom."],
+["Nucerini","5","Nucerinorum, m pl","Citizens of Nuceria who were involved in a major riot during gladiator games at Pompeii (1st century AD)."],
+["Penates","3","Penatum, m","Gods of the household and the household food."],
+["Pompeiani","5","Pompeianorum, m pl","Pompeians, the citizens of Pompeii."],
+["Remus","2","Remi, m","Romulus' twin brother (8th century BC)."],
+["Romulus","2,3","Romuli, m","The founder and first king of Rome (8th century BC)."],
+["Sabinae","5","Sabinarum, f pl","The Sabine Women, women from a neighbouring tribe who became the first Roman wives (8th century BC)."],
+["Scorpus","5","Scorpi, m","A phenomenally successful charioteer (1st century AD)."],
+["Sibylla","6","Sibyllae, f","The Sibyl, a prophetess of Apollo."],
+["Spartacus","5","Spartaci, m","The Thracian gladiator and leader of a major slave revolt (1st century BC)."],
+["Tarquinius Superbus","6","Tarquinius Superbus, m","Tarquin the Proud, the seventh and final king of Rome (6th century BC)."],
+["Venus","1","Veneris, f","Goddess of love."],
+["Vesta","3","Vestae, f","Goddess of the hearth and home."],
+["Vulcanus","1","Vulcani, m","Vulcan, the blacksmith god."]
+];
+VOCAB[9] = PEOPLE.map(p=>[(p[2].startsWith(p[0]) ? p[2] : p[0] + ", " + p[2]), p[3]]);
 // ---------- data ----------
 const DATA = {
   // ----- nouns -----
@@ -375,13 +405,14 @@ const GROUPS = [
   { label:"Nouns",    ids:["puella","amicus","templum","mercator","nomen"] },
   { label:"Verbs",    ids:["future","irregular","compounds","conj1","conj2","conj3","conj4"] },
   { label:"Pronouns", ids:["personal","relative","hic","ille"] },
+  { label:"People", ids:[] },
   { label:"Vocab", ids:["v1","v2","v3","v4","v5","v6","v7","v8","vall"] }
 ];
 
 // ~15s per form, min 3:00, max 45:00
 const quizTime = n => Math.min(2700, Math.max(180, n * 15));
 function resolveTime(n){
-  if (activeGroup === "Vocab" && vocabTime !== "auto")
+  if ((activeGroup === "Vocab" || activeGroup === "People") && vocabTime !== "auto")
     return vocabTime === "none" ? null : parseInt(vocabTime, 10);
   return quizTime(n);
 }
@@ -417,7 +448,7 @@ GROUPS.forEach(g => {
     activeGroup = g.label;
     renderGroupbar();
     renderQuizTabs();
-    if (g.label === "Vocab") selectVocab(); else select(g.ids[0]);
+    if (g.label === "Vocab") selectVocab(); else if (g.label === "People") selectPeople(); else select(g.ids[0]);
   };
   $("groupseg").appendChild(b);
 });
@@ -457,7 +488,7 @@ function renderVocabSetup(){
   all.onclick = toggleAllChapters;
   cc.appendChild(all);
   $("vocabMode").value = vocabMode;
-  $("vocabMode").onchange = e => { vocabMode = e.target.value; };
+  $("vocabMode").onchange = e => { vocabMode = e.target.value; updateDirVisibility(); };
   $("vocabTime").value = vocabTime;
   $("vocabTime").onchange = e => { vocabTime = e.target.value; if (!playing) selectVocab(); };
 }
@@ -474,8 +505,25 @@ function toggleAllChapters(){
   renderQuizTabs();
   selectVocab();
 }
+function renderPeopleSetup(){
+  $("tabs").innerHTML = `<div class="vsetup">
+    <div class="vlabel">English → Latin · Multiple choice</div>
+    <div class="vlabel">Time</div>
+    <select class="vmodesel" id="vocabTime">
+      <option value="auto">Auto</option>
+      <option value="300">5:00</option>
+      <option value="600">10:00</option>
+      <option value="1200">20:00</option>
+      <option value="2700">45:00</option>
+      <option value="none">No limit</option>
+    </select>
+  </div>`;
+  $("vocabTime").value = vocabTime;
+  $("vocabTime").onchange = e => { vocabTime = e.target.value; if (!playing) selectPeople(); };
+}
 function renderQuizTabs(){
   if (activeGroup === "Vocab"){ renderVocabSetup(); return; }
+  if (activeGroup === "People"){ renderPeopleSetup(); return; }
   $("tabs").innerHTML = "";
   GROUPS.find(x => x.label === activeGroup).ids.forEach(k => {
     const b = document.createElement("button");
@@ -500,7 +548,7 @@ function select(k){
 function resetGrid(){
   stopTimer(); playing = false;
   filled = Array(total).fill(false); score = 0;
-  { const lim = resolveTime(total); secs = lim === null ? 0 : lim; $("timer").textContent = lim === null ? "∞" : fmt(secs); }
+  { const lim = resolveTime(total); secs = 0; $("timer").textContent = lim === null ? "00:00" : fmt(lim); }
   $("score").textContent = `0/${total}`;
   $("playBtn").disabled = false; updateHeroLabels();
   $("answerWrap").style.display = "none"; $("giveupRow").style.display = "none";
@@ -583,7 +631,7 @@ function startGridGame(){
   { const lim = resolveTime(total); noTimer = (lim === null); secs = noTimer ? 0 : lim; }
   playing = true;
   $("playBtn").disabled = true; $("playBtn").textContent = playBusyLabel();
-  $("answerWrap").style.display = "block"; $("giveupRow").style.display = "flex";
+  $("answerWrap").style.display = "block"; $("giveupRow").style.display = DATA[current].vocab ? "none" : "flex";
   const inp = $("answer"); inp.disabled = false; inp.value = "";
   $("submitBtn").disabled = false;
   $("skipBtn").style.display = DATA[current].vocab ? "" : "none";
@@ -628,7 +676,8 @@ $("playBtn").onclick = () => {
     buildCustom();
     if (vocabMode === "mc") startMC();
     else { current = "vcustom"; startGridGame(); }
-  } else startGridGame();
+  } else if (activeGroup === "People") startMC();
+  else startGridGame();
 };
 $("giveup").onclick = () => { if (mcActive) endMC(false, false); else endGame(false); };
 $("learnBtn").onclick = () => {
@@ -641,7 +690,7 @@ $("learnBtn").onclick = () => {
 function resetGridSilent(){
   stopTimer(); playing = false;
   filled = Array(total).fill(false); score = 0;
-  { const lim = resolveTime(total); secs = lim === null ? 0 : lim; $("timer").textContent = lim === null ? "∞" : fmt(secs); }
+  { const lim = resolveTime(total); secs = 0; $("timer").textContent = lim === null ? "00:00" : fmt(lim); }
   $("score").textContent = `0/${total}`;
   $("playBtn").disabled = false; updateHeroLabels();
   $("answerWrap").style.display = "none"; $("giveupRow").style.display = "none";
@@ -711,11 +760,11 @@ $("skipBtn").onclick = () => {
 
 // ---------- custom vocab tester ----------
 DATA.vcustom = { title:"Vocab", sub:"", vocab:true, pairs:[], hints:[], answers:[] };
-function playIdleLabel(){ return activeGroup === "Vocab" ? "START TEST" : "PLAY QUIZ"; }
-function playBusyLabel(){ return activeGroup === "Vocab" ? "TESTING…" : "PLAYING…"; }
+function playIdleLabel(){ return (activeGroup === "Vocab" || activeGroup === "People") ? "START TEST" : "PLAY QUIZ"; }
+function playBusyLabel(){ return (activeGroup === "Vocab" || activeGroup === "People") ? "TESTING…" : "PLAYING…"; }
 function updateHeroLabels(){
   if (!playing) $("playBtn").textContent = playIdleLabel();
-  $("learnBtn").textContent = activeGroup === "Vocab" ? "Show All Answers" : "🎓 Learn";
+  $("learnBtn").textContent = (activeGroup === "Vocab" || activeGroup === "People") ? "Show All Answers" : "🎓 Learn";
 }
 function stopGame(){ if (!playing) return; if (mcActive) endMC(false, true); else endGame(false, true); }
 function shuffleInPlace(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
@@ -730,19 +779,32 @@ function buildCustom(){
   applyDir(DATA.vcustom);
   current = "vcustom"; total = pairs.length;
 }
+function updateDirVisibility(){
+  $("orderrow").style.display = (activeGroup === "Vocab" && vocabMode !== "mc") ? "" : "none";
+}
 function selectVocab(){
   learning = false; $("learnBtn").classList.remove("active");
   buildCustom();
-  $("orderrow").style.display = "";
+  updateDirVisibility();
+  updateHeroLabels();
+  resetGrid();
+}
+function selectPeople(){
+  learning = false; $("learnBtn").classList.remove("active");
+  vocabMode = "mc";
+  DATA.vcustom.title = "People";
+  DATA.vcustom.pairs = VOCAB[9];
+  applyDir(DATA.vcustom);
+  current = "vcustom"; total = DATA.vcustom.pairs.length;
+  $("orderrow").style.display = "none";
   updateHeroLabels();
   resetGrid();
 }
 function startMC(){
-  buildCustom();
   learning = false; $("learnBtn").classList.remove("active");
   const order = DATA.vcustom.pairs.map((_,i)=>i);
   shuffleInPlace(order);
-  mc = { order, pos:0, score:0, total:order.length, answered:false, opts:[], correct:"", prompt:"", pair:0 };
+  mc = { order, pos:0, score:0, mistakes:0, total:order.length, answered:false, opts:[], correct:"", prompt:"", pair:0 };
   total = mc.total; score = 0; filled = Array(total).fill(false);
   { const lim = resolveTime(total); noTimer = (lim === null); secs = noTimer ? 0 : lim; }
   playing = true; mcActive = true;
@@ -759,18 +821,16 @@ function startMC(){
 function renderMC(){
   const d = DATA.vcustom;
   const i = mc.order[mc.pos];
-  const laEn = vocabDir === "la-en";
-  const prompt = laEn ? d.pairs[i][0] : d.pairs[i][1];
-  const correct = laEn ? d.pairs[i][1] : d.pairs[i][0];
+  const prompt = d.pairs[i][1];
+  const correct = d.pairs[i][0];
   const pool = [];
-  d.pairs.forEach((p,j)=>{ if (j !== i){ const v = laEn ? p[1] : p[0]; if (v !== correct && !pool.includes(v)) pool.push(v); } });
+  d.pairs.forEach((p,j)=>{ if (j !== i){ const v = p[0]; if (v !== correct && !pool.includes(v)) pool.push(v); } });
   shuffleInPlace(pool);
   mc.opts = [correct, ...pool.slice(0,3)];
   shuffleInPlace(mc.opts);
   mc.correct = correct; mc.prompt = prompt; mc.pair = i; mc.answered = false;
   $("tablewrap").innerHTML = `<div class="mcq">${escapeHtml(prompt)}</div>
-  <div class="mcopts">${mc.opts.map((o,k)=>`<button class="mcopt" onclick="answerMC(${k})">${escapeHtml(o)}</button>`).join("")}
-  <button class="mcfinish" onclick="finishMC()">Finish Test</button></div>`;
+  <div class="mcopts">${mc.opts.map((o,k)=>`<button class="mcopt" onclick="answerMC(${k})">${escapeHtml(o)}</button>`).join("")}</div>`;
 }
 function answerMC(k){
   if (!playing || !mcActive || mc.answered) return;
@@ -785,16 +845,18 @@ function answerMC(k){
     $("hint").className = "good"; $("hint").textContent = "✅ Correct!";
   } else {
     btns[k].classList.add("wrong");
-    $("hint").className = "bad"; $("hint").textContent = `❌ Correct: ${mc.correct}`;
+    mc.mistakes++;
+    mc.order.push(mc.pair);
+    $("hint").className = "bad"; $("hint").textContent = `❌ Correct: ${mc.correct} — it'll come back!`;
   }
   setTimeout(()=>{
     if (!playing || !mcActive) return;
     mc.pos++;
-    if (mc.pos >= mc.total) endMC(true, false);
+    while (mc.pos < mc.order.length && filled[mc.order[mc.pos]]) mc.pos++;
+    if (mc.pos >= mc.order.length) endMC(true, false);
     else renderMC();
-  }, 850);
+  }, ok ? 850 : 1600);
 }
-function finishMC(){ if (playing && mcActive) endMC(false, false); }
 function endMC(finished, silent){
   stopTimer(); playing = false; mcActive = false;
   $("nowQ").style.display = "none";
@@ -802,14 +864,11 @@ function endMC(finished, silent){
   $("giveupRow").style.display = "none";
   $("tabs").classList.remove("locked");
   if (silent) return;
-  const missedIdx = filled.map((f,i) => f === true ? null : i).filter(x => x !== null);
-  const pct = Math.round(mc.score/mc.total*100);
+  const m = mc.mistakes;
   $("timer").textContent = fmt(Math.max(secs,0));
-  $("hint").className = finished && mc.score === mc.total ? "good" : "";
-  $("hint").textContent = finished
-    ? (mc.score === mc.total ? `🏆 Perfect! ${mc.total}/${mc.total} ${timeLeft()}!` : `Done! You got ${mc.score}/${mc.total} (${pct}%)`)
-    : `Stopped. You got ${mc.score}/${mc.total} — missed answers below.`;
-  $("tablewrap").innerHTML = missedTableHTML(DATA.vcustom, missedIdx) + `<div class="btnrow"><button onclick="startMC()">Retry Test</button></div>`;
+  $("hint").className = "good";
+  $("hint").textContent = `🏆 Done! ${mc.total}/${mc.total} ${timeLeft()}${m ? ` · ${m} mistake${m === 1 ? "" : "s"}` : " · flawless"}!`;
+  $("tablewrap").innerHTML = `<div class="btnrow"><button onclick="startMC()">Retry Test</button></div>`;
 }
 renderGroupbar();
 renderQuizTabs();
