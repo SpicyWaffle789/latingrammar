@@ -517,9 +517,11 @@ function renderPeopleSetup(){
       <option value="2700">45:00</option>
       <option value="none">No limit</option>
     </select>
+    <label class="chip"><input type="checkbox" id="forcedOrder"> Forced order</label>
   </div>`;
   $("vocabTime").value = vocabTime;
   $("vocabTime").onchange = e => { vocabTime = e.target.value; if (!playing) selectPeople(); };
+  $("forcedOrder").onchange = e => { forcedOrder = e.target.checked; if (!playing) selectPeople(); };
 }
 function renderQuizTabs(){
   if (activeGroup === "Vocab"){ renderVocabSetup(); return; }
@@ -780,7 +782,7 @@ function buildCustom(){
   current = "vcustom"; total = pairs.length;
 }
 function updateDirVisibility(){
-  $("orderrow").style.display = (activeGroup === "Vocab" && vocabMode !== "mc") ? "" : "none";
+  $("orderrow").style.display = (activeGroup === "Vocab" && vocabMode !== "mc" || activeGroup === "People" && forcedOrder) ? "" : "none";
 }
 function selectVocab(){
   learning = false; $("learnBtn").classList.remove("active");
@@ -799,11 +801,11 @@ function selectPeople(){
   $("orderrow").style.display = "none";
   updateHeroLabels();
   resetGrid();
+  forcedOrder = $("forcedOrder")?.checked || false;
 }
 function startMC(){
   learning = false; $("learnBtn").classList.remove("active");
-  const order = DATA.vcustom.pairs.map((_,i)=>i);
-  shuffleInPlace(order);
+  const order = forcedOrder ? DATA.vcustom.pairs.map((_,i)=>i) : shuffleInPlace(DATA.vcustom.pairs.map((_,i)=>i));
   mc = { order, pos:0, score:0, mistakes:0, total:order.length, answered:false, opts:[], correct:"", prompt:"", pair:0 };
   total = mc.total; score = 0; filled = Array(total).fill(false);
   { const lim = resolveTime(total); noTimer = (lim === null); secs = noTimer ? 0 : lim; }
@@ -851,8 +853,8 @@ function answerMC(k){
   }
   setTimeout(()=>{
     if (!playing || !mcActive) return;
-    mc.pos++;
-    while (mc.pos < mc.order.length && filled[mc.order[mc.pos]]) mc.pos++;
+    if (forcedOrder) mc.pos++;
+    else { mc.pos++; while (mc.pos < mc.order.length && filled[mc.order[mc.pos]]) mc.pos++; }
     if (mc.pos >= mc.order.length) endMC(true, false);
     else renderMC();
   }, ok ? 850 : 1600);
