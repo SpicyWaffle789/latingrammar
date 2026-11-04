@@ -120,31 +120,31 @@ capiō|capere|cēpī|mixed`)},
 3rd conjugation|regere|to rule
 4th conjugation|audīre|to hear
 mixed conjugation|capere|to capture`)},
-{id:"present",sec:"Verbs",title:"Present tense",hd:["",...CJ],rows:R(P6,`amō terreō regō audiō capiō
+{id:"present",conj:1,sec:"Verbs",title:"Present tense",hd:["",...CJ],rows:R(P6,`amō terreō regō audiō capiō
 amās terrēs regis audīs capis
 amat terret regit audit capit
 amāmus terrēmus regimus audīmus capimus
 amātis terrētis regitis audītis capitis
 amant terrent regunt audiunt capiunt`)},
-{id:"imperfect",sec:"Verbs",title:"Imperfect tense",hd:["",...CJ],rows:R(P6,`amābam terrēbam regēbam audiēbam capiēbam
+{id:"imperfect",conj:1,sec:"Verbs",title:"Imperfect tense",hd:["",...CJ],rows:R(P6,`amābam terrēbam regēbam audiēbam capiēbam
 amābās terrēbās regēbās audiēbās capiēbās
 amābat terrēbat regēbat audiēbat capiēbat
 amābāmus terrēbāmus regēbāmus audiēbāmus capiēbāmus
 amābātis terrēbātis regēbātis audiēbātis capiēbātis
 amābant terrēbant regēbant audiēbant capiēbant`)},
-{id:"future",sec:"Verbs",title:"Future tense",hd:["",...CJ],rows:R(P6,`amābō terrēbō regam audiam capiam
+{id:"future",conj:1,sec:"Verbs",title:"Future tense",hd:["",...CJ],rows:R(P6,`amābō terrēbō regam audiam capiam
 amābis terrēbis regēs audiēs capiēs
 amābit terrēbit reget audiet capiet
 amābimus terrēbimus regēmus audiēmus capiēmus
 amābitis terrēbitis regētis audiētis capiētis
 amābunt terrēbunt regent audient capient`)},
-{id:"perfect",sec:"Verbs",title:"Perfect tense",hd:["",...CJ],rows:R(P6,`amāvī terruī rēxī audīvī cēpī
+{id:"perfect",conj:2,sec:"Verbs",title:"Perfect tense",hd:["",...CJ],rows:R(P6,`amāvī terruī rēxī audīvī cēpī
 amāvistī terruistī rēxistī audīvistī cēpistī
 amāvit terruit rēxit audīvit cēpit
 amāvimus terruimus rēximus audīvimus cēpimus
 amāvistis terruistis rēxistis audīvistis cēpistis
 amāvērunt terruērunt rēxērunt audīvērunt cēpērunt`)},
-{id:"imperatives",sec:"Verbs",title:"Imperatives",hd:["",...CJ],rows:R(["imperative (sg)","imperative (pl)"],`amā terrē rege audī cape
+{id:"imperatives",conj:1,sec:"Verbs",title:"Imperatives",hd:["",...CJ],rows:R(["imperative (sg)","imperative (pl)"],`amā terrē rege audī cape
 amāte terrēte regite audīte capite`)},
 {id:"sum",sec:"Irregular verbs",title:"sum, esse, fuī – be",hd:["","present","imperfect","future"],rows:R(P6,`sum eram erō
 es erās eris
@@ -245,12 +245,14 @@ function render(){
   let h=`<h2>${t.title}</h2><div class="sec">${t.sec}${b?` · best ${b.s}/${b.n} in ${fmt(b.t)}`:""}</div>
   <div class="bar"><button class="${mode==="ref"?"":"alt"}" data-m="ref">Reference</button><button class="${mode==="quiz"?"":"alt"}" data-m="quiz">Quiz</button>${mode==="quiz"&&t.flip?`<button class="alt" id="flip">Flip direction</button>`:""}</div>`;
   if(mode==="ref"){h+=`<div class="sc">${refTable(t)}</div>`}
-  else{h+=`<div class="stat" id="stat"><div><small>Score</small><b id="sc">0/${count(t)}</b></div><div><small>Time</small><b id="tm">${fmt(limit(t))}</b></div><button class="go" id="start">Start Quiz</button><button class="alt" id="give" style="display:none">Give Up</button></div><div class="hint" id="hint">${t.stem?"Type only the ending. ":""}${t.rows.some(r=>r.some(c=>c.includes("/")))?"Any one answer separated by “/” is accepted.":""}</div><div id="res"></div><div class="sc">${quizTable(t)}</div>`}
+  else{h+=`<div class="stat" id="stat"><div><small>Score</small><b id="sc">0/${count(t)}</b></div><div><small>Time</small><b id="tm">${fmt(limit(t))}</b></div><button class="go" id="start">Start Quiz</button><button class="alt" id="give" style="display:none">Give Up</button></div><div class="hint" id="hint">${t.stem?"Type only the ending. ":""}${t.conj?"Type the full form of the verb shown in each column header (e.g. portō → portābō in the future). ":""}${t.rows.some(r=>r.some(c=>c.includes("/")))?"Any one answer separated by “/” is accepted.":""}</div><div id="res"></div><div class="sc">${quizTable(t)}</div>`}
   $("main").innerHTML=h;
 }
 const count=t=>{let n=0;view(t).rows.forEach(r=>r.slice(1).forEach(c=>{if(c!=="—")n++}));return n};
 const limit=t=>Math.max(60,count(t)*6);
-function view(t){if(flip&&t.flip)return{hd:[t.hd[1],t.hd[0]],rows:t.rows.map(r=>[r[1],r[0]]),stem:null};return{hd:t.hd,rows:t.rows,stem:t.stem}}
+const BW=["portō","moneō","dūcō","veniō","faciō"];
+function view(t){if(t.conj){const a=t.conj===2?["amāv","terru","rēx","audīv","cēp"]:["am","terr","reg","aud","cap"],b=t.conj===2?["portāv","monu","dūx","venīv","fēc"]:["port","mon","dūc","ven","fac"];return{hd:t.hd.map((h,i)=>i?h+" · "+BW[i-1]:h),rows:t.rows.map(r=>r.map((c,i)=>i&&c.startsWith(a[i-1])?b[i-1]+c.slice(a[i-1].length):c)),stem:null}}
+  if(flip&&t.flip)return{hd:[t.hd[1],t.hd[0]],rows:t.rows.map(r=>[r[1],r[0]]),stem:null};return{hd:t.hd,rows:t.rows,stem:t.stem}}
 function refTable(t){
   let h="<table><thead><tr>"+t.hd.map(x=>`<th>${x}</th>`).join("")+"</tr></thead><tbody>";
   t.rows.forEach(r=>{h+=`<tr><th>${r[0]}</th>`+r.slice(1).map((v,i)=>{const s=stemOf(t,i);return `<td>${s&&!lit(v)?`<span class="s">${s}-</span><b>${v}</b>`:txt(v)}</td>`}).join("")+"</tr>"});
