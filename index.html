@@ -267,10 +267,11 @@ function quizTable(t){
     return `<td>${s&&!lit(c)?`<span class="s">${s}-</span>`:""}<input disabled autocomplete="off" autocapitalize="none" spellcheck="false" data-a="${e.replace(/"/g,"&quot;")}"></td>`}).join("")+"</tr>"});
   return h+"</tbody></table>";
 }
+const ord=()=>[...document.querySelectorAll("#qt input")].sort((a,b)=>a.parentNode.cellIndex-b.parentNode.cellIndex||a.closest("tr").rowIndex-b.closest("tr").rowIndex);
 function start(){
   const t=cur,n=count(t);
   S={n,s:0,t0:Date.now(),lim:limit(t)};
-  document.querySelectorAll("#qt input").forEach(i=>{i.disabled=false});
+  ord().forEach((i,k)=>{i.disabled=false;i.tabIndex=k+1});
   const f=document.querySelector("#qt input");if(f)f.focus();
   $("start").style.display="none";$("give").style.display="";
   S.iv=setInterval(()=>{const left=S.lim-(Date.now()-S.t0)/1000;$("tm").textContent=fmt(Math.max(0,left));if(left<=0)finish("Time’s up!")},250);
@@ -289,7 +290,7 @@ function onInput(e){
   const a=i.dataset.a,ok=[...a.split("/"),a].map(N).filter(Boolean);
   if(ok.includes(N(i.value))){
     i.value=a;i.classList.add("ok");i.disabled=true;S.s++;$("sc").textContent=S.s+"/"+S.n;
-    const all=[...document.querySelectorAll("#qt input")],nx=all.slice(all.indexOf(i)+1).find(x=>!x.disabled)||all.find(x=>!x.disabled);
+    const all=ord(),nx=all.slice(all.indexOf(i)+1).find(x=>!x.disabled)||all.find(x=>!x.disabled);
     if(nx)nx.focus();
     if(S.s===S.n)finish("Finished!");
   }
