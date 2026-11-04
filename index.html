@@ -1,880 +1,307 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Latin Quiz — Nouns, Verbs & Pronouns</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Latin Reference Grammar Quizzes</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: #131313; color: #fff;
-    font-family: Arial, Helvetica, sans-serif;
-    display: flex; justify-content: center; padding: 16px;
-    min-height: 100vh;
-  }
-  .page { width: 100%; max-width: 1080px; }
-
-  /* ---- group switcher + quiz picker ---- */
-  .groupbar { display: flex; justify-content: center; margin-bottom: 16px; }
-  .groupbar .seg {
-    display: inline-flex; background: #1e1e1e; border: 1px solid #3a3a3a;
-    border-radius: 999px; padding: 4px; gap: 2px;
-  }
-  .gbtn {
-    background: transparent; border: 0; color: #9e9e9e; font-size: 13px; font-weight: bold;
-    letter-spacing: 2px; text-transform: uppercase; padding: 8px 22px; border-radius: 999px;
-    cursor: pointer; font-family: inherit;
-  }
-  .gbtn:hover { color: #fff; }
-  .gbtn.active { background: #4a90e2; color: #fff; }
-  .tabs { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; }
-  .tabs button.tab {
-    flex: 0 1 160px; background: #1e1e1e; color: #fff; border: 1px solid #3a3a3a; border-radius: 12px;
-    padding: 10px 12px; cursor: pointer; font-family: inherit;
-    display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center;
-  }
-  .tabs button.tab:hover { border-color: #4a90e2; }
-  .tabs button.tab.active { background: #4a90e2; border-color: #4a90e2; }
-  .tabs button.tab .t { font-size: 15px; font-weight: bold; }
-  .tabs button.tab .s { font-size: 12px; color: #9e9e9e; font-weight: normal; }
-  .tabs button.tab.active .s { color: rgba(255,255,255,.85); }
-
-  /* ---- forced-order toggle ---- */
-  .orderrow { display: flex; justify-content: center; align-items: center; gap: 18px; margin-bottom: 20px; }
-  .orderrow button {
-    background: none; border: 0; color: #9e9e9e; font-size: 14px;
-    cursor: pointer; font-family: inherit; padding: 4px 8px;
-  }
-  .orderrow button b { color: #fff; }
-  .orderrow button:hover { color: #fff; }
-  /* ---- hero row: PLAY QUIZ + Learn + Score + Timer ---- */
-  .hero { display: flex; align-items: center; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
-  #playBtn {
-    background: #4a90e2; color: #fff; border: 0; border-radius: 999px;
-    font-size: 30px; font-weight: 800; letter-spacing: 1px;
-    padding: 18px 0; flex: 1 1 320px; max-width: 460px; cursor: pointer; font-family: inherit;
-  }
-  #playBtn:hover { background: #357abd; }
-  #playBtn:disabled { opacity: .55; cursor: default; }
-  #learnBtn {
-    background: transparent; color: #fff; border: 2px solid #fff; border-radius: 999px;
-    font-size: 19px; font-weight: bold; padding: 14px 34px; cursor: pointer;
-    display: flex; align-items: center; gap: 10px; font-family: inherit;
-  }
-  #learnBtn:hover { background: #2a2a2a; }
-  #learnBtn.active { background: #fff; color: #000; }
-  .spacer { flex: 1; }
-  .stat { text-align: center; min-width: 130px; }
-  .stat .lbl { color: #9e9e9e; font-size: 14px; letter-spacing: 1px; margin-bottom: 6px; }
-  .stat .val { font-size: 56px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-
-  /* ---- answer input ---- */
-  #answerWrap { display: none; margin: 0 auto 16px; max-width: 640px; }
-  #answer {
-    flex: 1; min-width: 0; font-size: 20px; text-align: center; padding: 13px;
-    background: #1e1e1e; color: #fff; border: 2px solid #4a90e2; border-radius: 12px;
-    outline: none; font-family: inherit;
-  }
-  #answer::placeholder { color: #777; }
-  #answer:disabled { opacity: .4; }
-  .answerrow { display: flex; gap: 8px; }
-  .answerrow input { flex: 1; min-width: 0; }
-  #submitBtn {
-    background: #4a90e2; color: #fff; border: 0; border-radius: 12px;
-    font-size: 16px; font-weight: bold; padding: 0 22px; cursor: pointer; font-family: inherit;
-    white-space: nowrap;
-  }
-  #submitBtn:hover { background: #357abd; }
-  #submitBtn:disabled { opacity: .4; cursor: default; }
-  #skipBtn {
-    background: transparent; color: #9e9e9e; border: 1px solid #555; border-radius: 12px;
-    font-size: 14px; font-weight: bold; padding: 0 16px; cursor: pointer; font-family: inherit;
-    white-space: nowrap;
-  }
-  #skipBtn:hover { color: #fff; border-color: #888; }
-  #hint { text-align: center; min-height: 22px; font-size: 14px; color: #9e9e9e; margin-bottom: 10px; }
-  #nowQ { display: none; text-align: center; font-size: 24px; font-weight: 800; margin-bottom: 10px; }
-  #nowQ .qarrow { color: #4a90e2; }
-  #hint.bad { color: #ff8a80; }
-  #hint.good { color: #7fdb8f; }
-
-  /* ---- the grid ---- */
-  table.sheet { width: 100%; border-collapse: collapse; table-layout: fixed; }
-  table.sheet th {
-    background: #4a90e2; color: #fff; font-size: 19px; font-weight: 800;
-    padding: 10px 12px; text-align: center; border: 0;
-  }
-  table.sheet td {
-    border: 0; border-bottom: 1px solid #000;
-    padding: 0; font-size: 16px; text-align: center; color: #000; height: 40px;
-  }
-  table.sheet td.hintcell { background: #d9e8fb; width: 40%; }
-  table.sheet td.answercell { background: #fff; width: 60%; font-weight: bold; }
-  table.sheet td.answercell.next {
-    box-shadow: inset 0 0 0 3px #4a90e2;
-  }
-  table.sheet td.answercell.filled { background: #fff; color: #1b7f37; }
-  table.sheet td.answercell.missed { background: #f4cccc; color: #a50e0e; }
-  table.sheet td span.celltext { display: block; padding: 8px; }
-
-  .btnrow { display: flex; gap: 10px; justify-content: center; margin: 16px 0 8px; flex-wrap: wrap; }
-  .btnrow button {
-    background: #2a2a2a; color: #fff; border: 1px solid #555; border-radius: 999px;
-    padding: 9px 22px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: inherit;
-  }
-  .btnrow button:hover { background: #3a3a3a; }
-  button, select { transition: background-color .15s, border-color .15s, color .15s, opacity .15s; }
-  .mcoptcell { transition: background-color .15s, box-shadow .15s; }
-  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #8fbef5; outline-offset: 2px; }
-
-  /* ---- vocab tester setup (mockup style) ---- */
-  .vsetup { max-width: 640px; margin: 0 auto; text-align: center; }
-  .vsetup .vlabel { font-size: 19px; font-weight: 800; margin: 16px 0 12px; }
-  .vsetup .vlabel:first-child { margin-top: 0; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .chip {
-    background: #1e1e1e; border: 1px solid #3a3a3a; color: #cfcfcf; border-radius: 12px;
-    padding: 9px 16px; font-size: 14px; font-weight: bold; cursor: pointer; font-family: inherit;
-  }
-  .chip small { font-weight: normal; opacity: .65; }
-  .chip.on { background: #4a90e2; border-color: #4a90e2; color: #fff; }
-  .chip.on small { color: rgba(255,255,255,.8); }
-  select.vmodesel {
-    width: 100%; background: #3a3a3a; color: #fff; border: 0; border-radius: 12px;
-    font-size: 19px; padding: 15px 16px; font-family: inherit; outline: none; cursor: pointer;
-  }
-  .tabs.locked { opacity: .55; }
-  .tabs.locked .tab, .tabs.locked .vsetup { pointer-events: none; }
-
-  /* ---- multiple choice (dark cards) ---- */
-  .mcq { text-align: center; font-size: 40px; font-weight: 800; margin: 6px 0 18px; }
-  .mcopts { display: grid; gap: 12px; max-width: 640px; margin: 0 auto; }
-  .mcopt {
-    background: #2b2f33; border: 0; color: #fff; font-size: 20px;
-    padding: 16px; border-radius: 12px; cursor: pointer; font-family: inherit;
-  }
-  .mcopt:hover:not(:disabled) { background: #3a4046; }
-  .mcopt:disabled { cursor: default; }
-  .mcopt.right { background: #1b5e20; }
-  .mcopt.wrong { background: #7f1d1d; }
-  table.sheet.missed-only { max-width: 640px; margin: 0 auto 8px; }
-
-  /* ---- fill-in grid tables (like the doc) ---- */
-  .tablewrap { overflow-x: auto; border-radius: 12px; }
-  table.sheet.grid { table-layout: auto; }
-  table.sheet.grid td, table.sheet.grid th.colhead { border: 1px solid #000; }
-  table.sheet.grid th.colhead { background: #fff; color: #000; font-size: 15px; }
-  table.sheet.grid td.corner { background: #d9d9d9; font-weight: bold; padding: 8px; min-width: 110px; }
-  table.sheet.grid td.rowhead { background: #d9e8fb; padding: 8px; min-width: 130px; }
-  table.sheet.grid td.mcell { background: #fff; min-width: 96px; vertical-align: middle; }
-  .cellans { display: block; font-weight: bold; min-height: 20px; }
-  table.sheet.grid td.mcell.next { box-shadow: inset 0 0 0 3px #4a90e2; }
-  table.sheet.grid td.mcell.filled .cellans { color: #1b7f37; }
-  table.sheet.grid td.mcell.missed { background: #f4cccc; }
-  table.sheet.grid td.mcell.missed .cellans { color: #a50e0e; }
-
-  @media (max-width: 800px) {
-    .hero { gap: 16px; }
-    #nowQ { font-size: 20px; }
-    #playBtn { font-size: 22px; width: 100%; max-width: none; }
-    .stat { flex: 1; min-width: 0; }
-    .stat .val { font-size: 38px; }
-  }
+:root{--bg:#fff;--fg:#1b2430;--mut:#5b6777;--card:#f3f6fa;--bd:#cfd8e3;--hd:#1d4f91;--hdfg:#fff;--ac:#e8730c;--ok:#d9f2dc;--okfg:#176b2a;--bad:#fde0e0;--badfg:#a31919;--in:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14191f;--fg:#e6ebf1;--mut:#9aa7b6;--card:#1e2630;--bd:#33404f;--hd:#245fae;--ok:#1d4a28;--okfg:#9be6ac;--bad:#5a2323;--badfg:#ffb4b4;--in:#10151a}}
+:root[data-theme="dark"]{--bg:#14191f;--fg:#e6ebf1;--mut:#9aa7b6;--card:#1e2630;--bd:#33404f;--hd:#245fae;--ok:#1d4a28;--okfg:#9be6ac;--bad:#5a2323;--badfg:#ffb4b4;--in:#10151a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--hd);color:var(--hdfg);padding:14px 20px}
+header h1{margin:0;font-size:1.35rem}header p{margin:2px 0 0;opacity:.85;font-size:.9rem}
+.wrap{display:grid;grid-template-columns:250px 1fr;gap:20px;max-width:1200px;margin:0 auto;padding:16px}
+nav h3{margin:14px 0 4px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+nav h3:first-child{margin-top:0}
+nav a{display:block;padding:6px 10px;border-radius:6px;color:var(--fg);text-decoration:none;font-size:.93rem}
+nav a:hover{background:var(--card)}nav a.on{background:var(--hd);color:var(--hdfg)}
+main{min-width:0}
+main h2{margin:0 0 2px}.sec{color:var(--mut);font-size:.85rem;margin-bottom:12px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+button{font:inherit;border:0;border-radius:6px;padding:8px 16px;cursor:pointer;background:var(--hd);color:#fff;font-weight:600}
+button.go{background:var(--ac);font-size:1.05rem;padding:10px 26px}button.alt{background:var(--card);color:var(--fg);border:1px solid var(--bd)}
+.stat{display:flex;gap:18px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 16px;margin:10px 0}
+.stat b{font-size:1.5rem;font-variant-numeric:tabular-nums}.stat small{display:block;color:var(--mut);font-size:.72rem;text-transform:uppercase}
+.sc{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{border:1px solid var(--bd);padding:6px 10px;text-align:left;white-space:nowrap}
+thead th{background:var(--hd);color:var(--hdfg)}tbody th{background:var(--card);font-weight:600}
+.s{color:var(--mut)}td b{color:var(--ok-c,#2a7d3f)}
+td input{font:inherit;width:8.5em;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;background:var(--in);color:var(--fg)}
+td input.ok{background:var(--ok);color:var(--okfg);font-weight:600}td input.miss{background:var(--bad);color:var(--badfg)}
+.res{background:var(--card);border-left:5px solid var(--ac);padding:12px 16px;margin:12px 0;border-radius:6px}
+.hint{color:var(--mut);font-size:.85rem}
+@media(max-width:800px){.wrap{grid-template-columns:1fr}nav{max-height:190px;overflow:auto;border:1px solid var(--bd);border-radius:8px;padding:8px}}
 </style>
 </head>
 <body>
-<div class="page">
-
-  <div class="groupbar"><div class="seg" id="groupseg"></div></div>
-  <div class="tabs" id="tabs"></div>
-  <div class="orderrow" id="orderrow" style="display:none">
-    <button id="dirToggle" title="Flip quiz direction">⇄ <b id="dirState">Latin → English</b></button>
-  </div>
-
-  <div class="hero">
-    <button id="playBtn">PLAY QUIZ</button>
-    <button id="learnBtn">🎓 Learn</button>
-    <div class="spacer"></div>
-    <div class="stat"><div class="lbl">SCORE ⌄</div><div class="val" id="score">0/10</div></div>
-    <div class="stat"><div class="lbl">TIMER ⌄</div><div class="val" id="timer">03:00</div></div>
-  </div>
-
-  <div id="nowQ"></div>
-  <div id="answerWrap">
-    <div class="answerrow">
-      <input id="answer" type="text" placeholder="Type an answer, then press Enter…" autocomplete="off" autocapitalize="off" spellcheck="false">
-      <button id="submitBtn">Submit ⏎</button>
-      <button id="skipBtn" style="display:none">Skip →</button>
-    </div>
-  </div>
-  <div id="hint"></div>
-
-  <div class="tablewrap" id="tablewrap"></div>
-
-  <div class="btnrow" id="giveupRow" style="display:none">
-    <button id="giveup">Give Up &amp; Reveal</button>
-  </div>
-
-</div>
-
+<header><h1>Latin Reference Grammar · Quiz Lab</h1><p>Every table from pages 213–228, each with a timed type-in quiz. Typing without macrons works (amo = amō).</p></header>
+<div class="wrap"><nav id="nav"></nav><main id="main"></main></div>
 <script>
-// ---------- builders ----------
-// matrixQuiz keeps the real table shape (rows x cols) and also builds the
-// flat hints/answers the game logic runs on (row-major order).
-function matrixQuiz(o){
-  const hints = [], flat = [];
-  o.rows.forEach((r,i)=>o.cols.forEach((c,j)=>{ hints.push(`${r} — ${c}`); flat.push(o.answers[i][j]); }));
-  return { title:o.title, sub:o.sub, hints, answers:flat,
-    rows:o.rows, cols:o.cols, corner:o.corner||"",
-    colGroups:o.colGroups||null, groupCorner:o.groupCorner||"",
-    cellPrefix:o.cellPrefix||null, matrix:o.answers };
-}
-
-// ---------- vocabulary ----------
-let vocabDir = "la-en"; // or "en-la"
-function vocabQuiz(title, sub, pairs){
-  return { title, sub, vocab:true, pairs, hints:[], answers:[] };
-}
-function applyDir(q){
-  if (vocabDir === "la-en"){ q.hints = q.pairs.map(p=>p[0]); q.answers = q.pairs.map(p=>p[1]); }
-  else { q.hints = q.pairs.map(p=>p[1]); q.answers = q.pairs.map(p=>p[0]); }
-}
-// [latin, english] pairs per Stage
-const VOCAB = {
-1: [["amō","love, like"],["dea","goddess"],["deus","god"],["et","and, even"],["etiam","also, even"],["fēmina","woman"],["fīlia","daughter"],["fīlius","son"],["homō","man, human being, human"],["īrātus","angry"],["lacrimō","weep, cry"],["laetus","happy"],["laudō","praise"],["līberī","children"],["māter","mother"],["multus","much, many"],["pater","father"],["pulcher","beautiful, handsome"],["pūniō","punish"],["rēgīna","queen"],["regō","rule"],["rēx","king"],["saepe","often"],["saevus","savage, cruel"],["sed","but"],["sum","be"],["terreō","frighten, terrify"],["tum","then"],["uxor","wife"]],
-2: [["ad","to, towards, at"],["arma","arms, weapons"],["audāx","bold, daring"],["bellum","war"],["capiō","take, catch, capture"],["contrā","against"],["corpus","body"],["currō","run"],["eō","go"],["flūmen","river"],["fortis","brave, strong"],["fortiter","bravely, strongly"],["gladius","sword"],["Graecus","Greek"],["hasta","spear"],["iaciō","throw"],["in","in, into"],["ingēns","huge"],["interficiō","kill"],["maneō","remain, stay"],["nōn","not"],["per","through"],["perīculum","danger"],["prope","near"],["sagitta","arrow"],["silva","wood, forest"],["timeō","fear"],["trāns","across"],["vincō","conquer, win, be victorious, defeat"]],
-3: [["ā, ab","from"],["ascendō","climb"],["audiō","hear"],["auxilium","help"],["bonus","good"],["caelum","sky"],["celeriter","quickly"],["cum","with"],["dē","from"],["dēscendō","go down, come down"],["difficilis","difficult"],["diū","for a long time"],["equus","horse"],["facilis","easy"],["fēlīx","lucky"],["iubeō","order"],["magnus","big, large, great"],["malus","bad"],["mare","sea"],["mōns","mountain"],["petō","seek"],["possum","can, be able"],["pugnō","fight"],["subitō","suddenly"],["tandem","finally, at last"],["terra","land"]],
-4: [["aedificō","build"],["ager","field"],["aurum","gold"],["crēdō","believe"],["crūdēlis","cruel"],["cūr?","why"],["dō","give"],["dōnum","gift"],["faciō","make, do"],["ferō","carry"],["habeō","have"],["īra","anger"],["miser","miserable"],["nōlō","not want, refuse"],["nōmen","name"],["pecūnia","money"],["persuādeō","persuade"],["perterritus","terrified"],["pōnō","put"],["quandō?","when"],["quod","because"],["semper","always"],["tamen","however"],["templum","temple"],["trīstis","sad"],["ubi?","where"],["volō","want"]],
-5: [["absum","be absent, be away, be distant from"],["adsum","be here, be present"],["agricola","farmer"],["ancilla","female slave"],["aqua","water"],["bibō","drink"],["cēna","dinner, meal"],["cēterī","the rest, the others"],["cibus","food"],["clāmō","shout"],["cōnsūmō","eat"],["fessus","tired"],["festīnō","hurry"],["iterum","again"],["lūdus","school, game, festival"],["magnopere","greatly, very much"],["mortuus","dead"],["mox","soon"],["nunc","now"],["parō","prepare, provide"],["rīdeō","laugh, smile, laugh at"],["sacer","sacred"],["servus","slave"],["spectō","look at, watch"],["taberna","shop, inn"],["urbs","city"],["veniō","come"],["vīlla","house, country villa, villa"],["vīnum","wine"],["vocō","call"]],
-6: [["altus","high, deep"],["amīcus","friend"],["annus","year"],["dormiō","sleep"],["emō","buy"],["hīc","here"],["hōra","hour"],["iam","now, already"],["ibi","there"],["itaque","and so, therefore"],["iuvenis","young man"],["locus","place"],["meus","my"],["moneō","warn, advise"],["nōlī","do not..."],["noster","our"],["novus","new"],["numquam","never"],["ostendō","show"],["parvus","small"],["puella","girl"],["puer","boy"],["respondeō","reply"],["rogō","ask, ask for"],["sīc","thus, in this way"],["suus","his, her, its, their"],["tuus","your, yours"],["verbum","word"],["vester","your, yours"],["videō","see"]],
-7: [["ambulō","walk"],["antequam","before"],["cīvis","citizen"],["clārus","famous, clear"],["dīcō","say, speak, tell"],["domina","mistress"],["dominus","master"],["et ... et","both ... and"],["forum","forum, market place"],["habitō","live"],["hic","this, these"],["hortus","garden"],["ille","that, those, he, she, it"],["is","he, she, it, that, those"],["līberō","set free"],["lībertus","freedman, ex-slave"],["mūrus","wall"],["nūntius","messenger"],["omnis","all, every"],["paucī","few, a few"],["postquam","after, when"],["quamquam","although"],["quī","who, which"],["quis?","who, what, which"],["quoque","also, too"],["salūtō","greet"],["senātor","senator"],["ubi","when, where"],["via","street, road, way"]],
-8: [["abeō","go away"],["adeō","go to, approach"],["appropinquō","approach, come near to"],["clāmor","shout, shouting, noise"],["conveniō","come together, gather, meet"],["cupiō","want, desire"],["ego","I, me"],["enim","for"],["epistula","letter"],["exeō","go out from, go away"],["ferōx","fierce, ferocious"],["frūstrā","in vain"],["ineō","go into, enter"],["labōrō","work, toil"],["legō","read, choose"],["liber","book"],["longus","long"],["magis","more"],["magister","teacher"],["maior","bigger, larger, greater"],["maximē","very greatly"],["maximus","greatest, largest, biggest"],["medius","middle"],["melior","better"],["minimus","smallest, least"],["minor","smaller, less"],["nōbilis","of noble birth, renowned"],["nōs","we, us"],["nōtus","famous, well known"],["optimus","best"],["peior","worse"],["pereō","die, perish"],["pessimus","worst"],["plūrēs","more"],["plūrimus","most, very many"],["plūs","more"],["quam","than, how, as ... as possible"],["redeō","go back, come back, return"],["scrībō","write"],["sē","himself, herself, itself, themselves"],["senex","old man"],["stultus","stupid, foolish"],["trānseō","go over, cross"],["tū","you"],["vir","man, husband"],["vōs","you all, you"]]
-};
-
-// ---------- significant people: [name, chapters, latin form, description] ----------
-const PEOPLE = [
-["Aeneas","2,3,4,6","Aeneae, m","The mythical father of the Roman race and hero of Virgil's epic poem, the Aeneid."],
-["Augustus","4","Augusti, m","The first Roman emperor (1st century BC)."],
-["Cacus","4","Caci, m","A mythical monster that terrified the early inhabitants of Italy."],
-["Caesar","6","Caesaris, m","Julius Caesar, Rome's most famous general, was appointed Dictator but murdered for allegedly wanting to be king (1st century BC)."],
-["Cerberus","4","Cerberi, m","The mythical guard dog of the Underworld."],
-["Cloelia","2","Cloeliae, f","A daring young woman held hostage by the Etruscan king Porsena managed to escape (6th century BC)."],
-["Cumae","6","Cumarum, f pl","An ancient settlement near Naples and home to the Sibyl's cave."],
-["Evander","4","Evandri, m","A mythical Greek exile and ruler of the territory that would become the city of Rome."],
-["Fabius","4","Fabii, m","Quintus Fabius Maximus was a distinguished noble and Dictator in the wars against Hannibal (3rd century BC)."],
-["Hannibal","4","Hannibalis, m","A Carthaginian noble and Rome's greatest enemy (3rd century BC)."],
-["Hercules","4","Herculis, m","A Greek mythical hero who travelled to the site that would one day be Rome."],
-["Horatius","2","Horatii, m","Horatius Cocles, the Roman hero who defended the bridge over the river Tiber against Porsena's army (6th century BC)."],
-["Ianus","3","Iani, m","Janus, the Roman god of beginnings and endings, entrances and exits."],
-["Iuno","1","Iunonis, f","Juno, queen of the gods."],
-["Iuppiter","1","Iovis, m","Jupiter, king of the gods."],
-["Marius","6","Marii, m","A famous Roman noble who became consul 7 times (2nd century BC)."],
-["Mars","1","Martis, m","God of war."],
-["Minerva","1","Minervae, f","Goddess of wisdom."],
-["Nucerini","5","Nucerinorum, m pl","Citizens of Nuceria who were involved in a major riot during gladiator games at Pompeii (1st century AD)."],
-["Penates","3","Penatum, m","Gods of the household and the household food."],
-["Pompeiani","5","Pompeianorum, m pl","Pompeians, the citizens of Pompeii."],
-["Remus","2","Remi, m","Romulus' twin brother (8th century BC)."],
-["Romulus","2,3","Romuli, m","The founder and first king of Rome (8th century BC)."],
-["Sabinae","5","Sabinarum, f pl","The Sabine Women, women from a neighbouring tribe who became the first Roman wives (8th century BC)."],
-["Scorpus","5","Scorpi, m","A phenomenally successful charioteer (1st century AD)."],
-["Sibylla","6","Sibyllae, f","The Sibyl, a prophetess of Apollo."],
-["Spartacus","5","Spartaci, m","The Thracian gladiator and leader of a major slave revolt (1st century BC)."],
-["Tarquinius Superbus","6","Tarquinius Superbus, m","Tarquin the Proud, the seventh and final king of Rome (6th century BC)."],
-["Venus","1","Veneris, f","Goddess of love."],
-["Vesta","3","Vestae, f","Goddess of the hearth and home."],
-["Vulcanus","1","Vulcani, m","Vulcan, the blacksmith god."]
+const P6=["I","you (sg)","he / she / it","we","you (pl)","they"],
+C10=["nominative sg","accusative sg","genitive sg","dative sg","ablative sg","nominative pl","accusative pl","genitive pl","dative pl","ablative pl"],
+C5=["nominative","accusative","genitive","dative","ablative"],
+CJ=["1st conj.","2nd conj.","3rd conj.","4th conj.","mixed conj."];
+const R=(l,s)=>s.trim().split("\n").map((x,i)=>[l[i],...x.trim().split(/\s+/).map(c=>c.replace(/_/g," "))]);
+const D=s=>s.trim().split("\n").map(x=>x.split("|"));
+const T=[
+{id:"cases",sec:"Nouns",title:"Cases",hd:["Case","Main role"],rows:D(`nominative|subject
+vocative|addressed/addressing
+accusative|object
+genitive|of/possession
+dative|to/for/indirect object
+ablative|by/with/from`)},
+{id:"declensions",sec:"Nouns",title:"Declension of a noun",hd:["Noun","Declension","Stem"],rows:D(`fēmina|1st|fēmin-
+deus|2nd|de-
+bellum|2nd|bell-
+rēx|3rd|rēg-
+flūmen|3rd|flūmin-`)},
+{id:"first-decl",sec:"Nouns",title:"1st declension",hd:["","fēmina"],stem:"fēmin",rows:R(C10,"a\nam\nae\nae\nā\nae\nās\nārum\nīs\nīs")},
+{id:"second-decl",sec:"Nouns",title:"2nd declension",hd:["","masc (deus)","neuter (bellum)"],stem:["de","bell"],rows:R(C10,"us um\num um\nī ī\nō ō\nō ō\nī a\nōs a\nōrum ōrum\nīs īs\nīs īs")},
+{id:"third-decl",sec:"Nouns",title:"3rd declension",hd:["","masc / fem (rēx)","neuter (flūmen)"],stem:["rēg","flūmin"],rows:R(C10,"=(rēx) =(flūmen)\nem =(flūmen)\nis is\nī ī\ne e\nēs a\nēs a\num um\nibus ibus\nibus ibus")},
+{id:"adj-212",sec:"Adjectives",title:"2-1-2 adjectives (irātus)",hd:["","masculine","feminine","neuter"],stem:"irāt",rows:R(C10,"us a um\num am um\nī ae ī\nō ae ō\nō ā ō\nī ae a\nōs ās a\nōrum ārum ōrum\nīs īs īs\nīs īs īs")},
+{id:"adj-fortis",sec:"Adjectives",title:"3rd declension adjectives: fortis, forte",hd:["","masc / fem","neuter"],stem:"fort",rows:R(C10,"is e\nem e\nis is\nī ī\nī ī\nēs ia\nēs ia\nium ium\nibus ibus\nibus ibus")},
+{id:"adj-ingens",sec:"Adjectives",title:"3rd declension adjectives: ingēns, ingentis",hd:["","masc / fem","neuter"],stem:"ingent",rows:R(C10,"=(ingēns) =(ingēns)\nem =(ingēns)\nis is\nī ī\nī ī\nēs ia\nēs ia\nium ium\nibus ibus\nibus ibus")},
+{id:"pres-part-decl",sec:"Adjectives",title:"Present participle declension (regēns)",hd:["","masc / fem","neuter"],stem:"regent",rows:R(C10,"=regēns =regēns\nem =regēns\nis is\nī ī\nī ī\nēs ia\nēs ia\nium ium\nibus ibus\nibus ibus")},
+{id:"pres-part",sec:"Adjectives",title:"Present participles by conjugation",hd:["Conjugation","Nominative","Genitive","Meaning"],rows:D(`1st|amāns|amantis|loving
+2nd|terrēns|terrentis|terrifying
+3rd|regēns|regentis|ruling
+4th|audiēns|audientis|listening
+mixed|capiēns|capientis|taking`)},
+{id:"adverb-form",sec:"Adverbs & prepositions",title:"Forming adverbs",hd:["Adjective","Adverb","Meaning"],rows:D(`laetus, laeta, laetum|laetē|happily
+fortis, forte|fortiter|bravely/strongly`)},
+{id:"adverbs",sec:"Adverbs & prepositions",title:"Common adverbs",flip:1,hd:["Latin","English"],rows:D(`semper|always
+etiam|also/even
+iterum|again
+saepe|often
+magnopere|greatly/very much
+tum|then
+mox|soon
+fortiter|bravely/strongly
+nunc|now
+nōn|not
+hic|here
+celeriter|quickly
+iam|now/already
+diū|for a long time
+ibi|there
+ōlim|once/some time ago
+numquam|never
+subitō|suddenly
+sīc|thus/in this way
+tandem|at last/finally`)},
+{id:"prepositions",sec:"Adverbs & prepositions",title:"Prepositions",hd:["Preposition","Meaning"],rows:D(`ad + accusative|to/towards/at
+contrā + accusative|against
+in + accusative|into
+per + accusative|through/along
+prope + accusative|near
+trāns + accusative|across
+ā, ab + ablative|from/away from/by
+cum + ablative|with
+dē + ablative|from/down from/about
+ē, ex + ablative|from/out of/out from
+in + ablative|in/on`)},
+{id:"q-yesno",sec:"Questions",title:"Yes / no question words",hd:["Word","Invites the answer"],rows:D(`-ne|yes or no
+nōnne … ?|yes
+num … ?|no`)},
+{id:"q-words",sec:"Questions",title:"Question words",flip:1,hd:["Latin","English"],rows:D(`cūr?|why
+quandō?|when
+ubi?|where`)},
+{id:"conjugations",sec:"Verbs",title:"Conjugations & principal parts",hd:["1st principal part","Infinitive","Perfect","Conjugation"],rows:D(`amō|amāre|amāvī|1st
+terreō|terrēre|terruī|2nd
+regō|regere|rēxī|3rd
+audiō|audīre|audīvī|4th
+capiō|capere|cēpī|mixed`)},
+{id:"infinitives",sec:"Verbs",title:"Infinitives",hd:["Conjugation","Infinitive","Meaning"],rows:D(`1st conjugation|amāre|to love
+2nd conjugation|terrēre|to frighten
+3rd conjugation|regere|to rule
+4th conjugation|audīre|to hear
+mixed conjugation|capere|to capture`)},
+{id:"present",sec:"Verbs",title:"Present tense",hd:["",...CJ],rows:R(P6,`amō terreō regō audiō capiō
+amās terrēs regis audīs capis
+amat terret regit audit capit
+amāmus terrēmus regimus audīmus capimus
+amātis terrētis regitis audītis capitis
+amant terrent regunt audiunt capiunt`)},
+{id:"imperfect",sec:"Verbs",title:"Imperfect tense",hd:["",...CJ],rows:R(P6,`amābam terrēbam regēbam audiēbam capiēbam
+amābās terrēbās regēbās audiēbās capiēbās
+amābat terrēbat regēbat audiēbat capiēbat
+amābāmus terrēbāmus regēbāmus audiēbāmus capiēbāmus
+amābātis terrēbātis regēbātis audiēbātis capiēbātis
+amābant terrēbant regēbant audiēbant capiēbant`)},
+{id:"future",sec:"Verbs",title:"Future tense",hd:["",...CJ],rows:R(P6,`amābō terrēbō regam audiam capiam
+amābis terrēbis regēs audiēs capiēs
+amābit terrēbit reget audiet capiet
+amābimus terrēbimus regēmus audiēmus capiēmus
+amābitis terrēbitis regētis audiētis capiētis
+amābunt terrēbunt regent audient capient`)},
+{id:"perfect",sec:"Verbs",title:"Perfect tense",hd:["",...CJ],rows:R(P6,`amāvī terruī rēxī audīvī cēpī
+amāvistī terruistī rēxistī audīvistī cēpistī
+amāvit terruit rēxit audīvit cēpit
+amāvimus terruimus rēximus audīvimus cēpimus
+amāvistis terruistis rēxistis audīvistis cēpistis
+amāvērunt terruērunt rēxērunt audīvērunt cēpērunt`)},
+{id:"imperatives",sec:"Verbs",title:"Imperatives",hd:["",...CJ],rows:R(["imperative (sg)","imperative (pl)"],`amā terrē rege audī cape
+amāte terrēte regite audīte capite`)},
+{id:"sum",sec:"Irregular verbs",title:"sum, esse, fuī – be",hd:["","present","imperfect","future"],rows:R(P6,`sum eram erō
+es erās eris
+est erat erit
+sumus erāmus erimus
+estis erātis eritis
+sunt erant erunt`)},
+{id:"possum",sec:"Irregular verbs",title:"possum, posse, potuī – can",hd:["","present","imperfect","future"],rows:R(P6,`possum poteram poterō
+potes poterās poteris
+potest poterat poterit
+possumus poterāmus poterimus
+potestis poterātis poteritis
+possunt poterant poterunt`)},
+{id:"eo",sec:"Irregular verbs",title:"eō, īre, iī – go",hd:["","present","imperfect","future"],rows:R(P6,`eō ībam ībō
+īs ībās ībis
+it ībat ībit
+īmus ībāmus ībimus
+ītis ībātis ībitis
+eunt ībant ībunt`)},
+{id:"volo",sec:"Irregular verbs",title:"volō, velle, voluī – want",hd:["","present","imperfect","future"],rows:R(P6,`volō volēbam volam
+vīs volēbās volēs
+vult volēbat volet
+volumus volēbāmus volēmus
+vultis volēbātis volētis
+volunt volēbant volent`)},
+{id:"nolo",sec:"Irregular verbs",title:"nōlō, nolle, nōluī – not want",hd:["","present","imperfect","future"],rows:R(P6,`nōlō nōlēbam nōlam
+nōn_vīs nōlēbās nōlēs
+nōn_vult nōlēbat nōlet
+nōlumus nōlēbāmus nōlēmus
+nōn_vultis nōlēbātis nōlētis
+nōlunt nōlēbant nōlent`)},
+{id:"fero",sec:"Irregular verbs",title:"ferō, ferre, tulī – carry",hd:["","present","imperfect","future","perfect"],rows:R(P6,`ferō ferēbam feram tulī
+fers ferēbās ferēs tulistī
+fert ferēbat feret tulit
+ferimus ferēbāmus ferēmus tulimus
+fertis ferēbātis ferētis tulistis
+ferunt ferēbant ferent tulērunt`)},
+{id:"irr-imp",sec:"Irregular verbs",title:"Irregular imperatives & participles",hd:["Verb","Imperative sg","Imperative pl","Participle (nom)","Participle (gen)"],rows:D(`eō|ī|ite|iēns|euntis
+volō|—|—|volēns|volentis
+nōlō|nōlī|nōlīte|nōlēns|nōlentis
+ferō|fer|ferte|ferēns|ferentis`)},
+{id:"numbers",sec:"Numbers",title:"Numbers 1–1000",flip:1,hd:["Latin","Number"],rows:D(`ūnus|1
+duo|2
+trēs|3
+quattuor|4
+quinque|5
+sex|6
+septem|7
+octō|8
+novem|9
+decem|10
+centum|100
+mille|1000
+mīlia / mīlium|1000s`)},
+{id:"ordinals",sec:"Numbers",title:"Ordinals",flip:1,hd:["Latin","English"],rows:D(`prīmus|first
+secundus|second
+tertius|third
+quārtus|fourth
+quīntus|fifth
+sextus|sixth
+septimus|seventh
+octāvus|eighth
+nōnus|ninth
+decimus|tenth`)},
+{id:"one",sec:"Numbers",title:"“one” declined",hd:["","masculine","feminine","neuter"],rows:R(C5,`ūnus ūna ūnum
+ūnum ūnam ūnum
+ūnīus ūnīus ūnīus
+ūnī ūnī ūnī
+ūnō ūnā ūnō`)},
+{id:"two",sec:"Numbers",title:"“two” declined",hd:["","masculine","feminine","neuter"],rows:R(C5,`duo duae duo
+duōs duās duo
+duōrum duārum duōrum
+duōbus duābus duōbus
+duōbus duābus duōbus`)},
+{id:"three",sec:"Numbers",title:"“three” declined",hd:["","masc / fem","neuter"],rows:R(C5,`trēs tria
+trēs tria
+trium trium
+tribus tribus
+tribus tribus`)}
 ];
-VOCAB[9] = PEOPLE.map(p=>[(p[2].startsWith(p[0]) ? p[2] : p[0] + ", " + p[2]), p[3]]);
-// ---------- data ----------
-const DATA = {
-  // ----- nouns -----
-  puella:   { title:"Puella", sub:"1st f.", hints:["Nominative Singular","Accusative Singular","Genitive Singular","Dative Singular","Ablative Singular","Nominative Plural","Accusative Plural","Genitive Plural","Dative Plural","Ablative Plural"],
-              answers:["puella","puellam","puellae","puellae","puella","puellae","puellas","puellarum","puellis","puellis"] },
-  amicus:   { title:"Amicus", sub:"2nd m.", hints:["Nominative Singular (Masculine)","Accusative Singular (Masculine)","Genitive Singular (Masculine)","Dative Singular (Masculine)","Ablative Singular (Masculine)","Nominative Plural (Masculine)","Accusative Plural (Masculine)","Genitive Plural (Masculine)","Dative Plural (Masculine)","Ablative Plural (Masculine)"],
-              answers:["amicus","amicum","amici","amico","amico","amici","amicos","amicorum","amicis","amicis"] },
-  templum:  { title:"Templum", sub:"2nd n.", hints:["Nominative Singular (Neuter)","Accusative Singular (Neuter)","Genitive Singular (Neuter)","Dative Singular (Neuter)","Ablative Singular (Neuter)","Nominative Plural (Neuter)","Accusative Plural (Neuter)","Genitive Plural (Neuter)","Dative Plural (Neuter)","Ablative Plural (Neuter)"],
-              answers:["templum","templum","templi","templo","templo","templa","templa","templorum","templis","templis"] },
-  mercator: { title:"Mercator", sub:"3rd m.", hints:["Nominative Singular (Masculine)","Accusative Singular (Masculine)","Genitive Singular (Masculine)","Dative Singular (Masculine)","Ablative Singular (Masculine)","Nominative Plural (Masculine)","Accusative Plural (Masculine)","Genitive Plural (Masculine)","Dative Plural (Masculine)","Ablative Plural (Masculine)"],
-              answers:["mercator","mercatorem","mercatoris","mercatori","mercatore","mercatores","mercatores","mercatorum","mercatoribus","mercatoribus"] },
-  nomen:    { title:"Nomen", sub:"3rd n.", hints:["Nominative Singular (Neuter)","Accusative Singular (Neuter)","Genitive Singular (Neuter)","Dative Singular (Neuter)","Ablative Singular (Neuter)","Nominative Plural (Neuter)","Accusative Plural (Neuter)","Genitive Plural (Neuter)","Dative Plural (Neuter)","Ablative Plural (Neuter)"],
-              answers:["nomen","nomen","nominis","nomini","nomine","nomina","nomina","nominum","nominibus","nominibus"] },
-
-  // ----- future tense -----
-  future: matrixQuiz({ title:"Future Tense", sub:"24 forms", corner:"Person",
-    rows:["1st singular (I)","2nd singular (you)","3rd singular (he/she/it)","1st plural (we)","2nd plural (you)","3rd plural (they)"],
-    cols:["First conjugation","Second conjugation","Third conjugation","Fourth conjugation"],
-    answers:[["portabo","docebo","traham","audiam"],
-     ["portabis","docebis","trahes","audies"],
-     ["portabit","docebit","trahet","audiet"],
-     ["portabimus","docebimus","trahemus","audiemus"],
-     ["portabitis","docebitis","trahetis","audietis"],
-     ["portabunt","docebunt","trahent","audient"]] }),
-
-  // ----- irregular verbs -----
-  irregular: matrixQuiz({ title:"Irregular Verbs", sub:"42 forms", corner:"",
-    rows:["I","You","He/She/It","We","You (plural)","They"],
-    cols:["Able","Want","Not Want","Am","Was","Go","I Carry"],
-    answers:[["possum","volo","nolo","sum","eram","eo","fero"],
-     ["potes","vis","Non vis","es","eras","is","fers"],
-     ["potest","vult","Non vult","est","erat","it","fert"],
-     ["possumus","volumus","Nolumus","sumus","eramus","imus","ferimus"],
-     ["potestis","vultis","Non vultis","estis","eratis","itis","fertis"],
-     ["possunt","volunt","Nolunt","sunt","erant","eunt","ferunt"]] }),
-
-  // ----- compounds of sum -----
-  compounds: matrixQuiz({ title:"Compounds of Sum", sub:"24 forms", corner:"",
-    rows:["I","You","He/She/It","We","You (plural)","They"],
-    cols:["I am present","I am absent","I was present","I was absent"],
-    answers:[["adsum","absum","aderam","aberam"],
-     ["ades","abes","aderas","aberas"],
-     ["adest","abest","aderat","aberat"],
-     ["adsumus","absumus","aderamus","aberamus"],
-     ["adestis","abestis","aderatis","aberatis"],
-     ["adsunt","absunt","aderant","aberant"]] }),
-
-  // ----- conjugations -----
-  conj1: matrixQuiz({ title:"1st Conjugation", sub:"porto", corner:"",
-    rows:["I","You","He/She/It","We","You (pl.)","They"],
-    cols:["Present tense","Imperfect tense","Perfect Tense"],
-    answers:[["porto","portabam","portavi"],["portas","portabas","portavisti"],
-             ["portat","portabat","portavit"],["portamus","portabamus","portavimus"],
-             ["portatis","portabatis","portavistis"],["portant","portabant","portaverunt"]] }),
-  conj2: matrixQuiz({ title:"2nd Conjugation", sub:"doceo", corner:"",
-    rows:["I","You","He/She/It","We","You (pl.)","They"],
-    cols:["Present tense","Imperfect tense","Perfect Tense"],
-    answers:[["doceo","docebam","docui"],["doces","docebas","docuisti"],
-             ["docet","docebat","docuit"],["docemus","docebamus","docuimus"],
-             ["docetis","docebatis","docuistis"],["docent","docebant","docuerunt"]] }),
-  conj3: matrixQuiz({ title:"3rd Conjugation", sub:"traho", corner:"",
-    rows:["I","You","He/She/It","We","You (pl.)","They"],
-    cols:["Present tense","Imperfect tense","Perfect Tense"],
-    answers:[["traho","trahebam","traxi"],["trahis","trahebas","traxisti"],
-             ["trahit","trahebat","traxit"],["trahimus","trahebamus","traximus"],
-             ["trahitis","trahebatis","traxistis"],["trahunt","trahebant","traxerunt"]] }),
-  conj4: matrixQuiz({ title:"4th Conjugation", sub:"audio", corner:"",
-    rows:["I","You","He/She/It","We","You (pl.)","They"],
-    cols:["Present tense","Imperfect tense","Perfect Tense"],
-    answers:[["audio","audiebam","audivi"],["audis","audiebas","audivisti"],
-             ["audit","audiebat","audivit"],["audimus","audiebamus","audivimus"],
-             ["auditis","audiebatis","audivistis"],["audiunt","audiebant","audiverunt"]] }),
-
-  // ----- pronouns -----
-  personal: matrixQuiz({ title:"Personal Pronouns", sub:"20 forms",
-    groupCorner:"NUMBER:", colGroups:["SINGULAR","SINGULAR","PLURAL","PLURAL"],
-    corner:"PERSON:", cols:["1","2","1","2"],
-    rows:["NOMINATIVE","ACCUSATIVE","DATIVE","GENITIVE","ABLATIVE"],
-    answers:[["ego","tu","nos","vos"],
-     ["me","te","nos","vos"],
-     ["mihi","tibi","nobis","vobis"],
-     ["mei","tui","nostrum","vestrum"],
-     ["me","te","nobis","vobis"]] }),
-  relative: matrixQuiz({ title:"Relative — Who", sub:"10 forms", corner:"",
-    rows:["NOMINATIVE","ACCUSATIVE","DATIVE","GENITIVE","ABLATIVE"],
-    cols:["SINGULAR","PLURAL"],
-    answers:[["quis","qui"],
-     ["quem","quos"],
-     ["cui","quibus"],
-     ["cuius","quorum"],
-     ["quo","quibus"]] }),
-  hic: matrixQuiz({ title:"Demonstrative — This (hic)", sub:"12 forms",
-    groupCorner:"NUMBER:", colGroups:["SINGULAR","SINGULAR","SINGULAR","PLURAL","PLURAL","PLURAL"],
-    corner:"GENDER:", cols:["MASCULINE","FEMININE","NEUTER","MASCULINE","FEMININE","NEUTER"],
-    rows:["NOMINATIVE","ACCUSATIVE"],
-    answers:[["hic","haec","hoc","hi","hae","haec"],
-     ["hunc","hanc","hoc","hos","has","haec"]] }),
-  ille: matrixQuiz({ title:"Demonstrative — That (ille)", sub:"12 forms",
-    groupCorner:"NUMBER:", colGroups:["SINGULAR","SINGULAR","SINGULAR","PLURAL","PLURAL","PLURAL"],
-    corner:"GENDER:", cols:["MASCULINE","FEMININE","NEUTER","MASCULINE","FEMININE","NEUTER"],
-    rows:["NOMINATIVE","ACCUSATIVE"],
-    answers:[["ille","illa","illud","illi","illae","illa"],
-     ["illum","illam","illud","illos","illas","illa"]] }),
-  v1: vocabQuiz("Stage 1", "29 words", VOCAB[1]),
-  v2: vocabQuiz("Stage 2", "29 words", VOCAB[2]),
-  v3: vocabQuiz("Stage 3", "26 words", VOCAB[3]),
-  v4: vocabQuiz("Stage 4", "27 words", VOCAB[4]),
-  v5: vocabQuiz("Stage 5", "30 words", VOCAB[5]),
-  v6: vocabQuiz("Stage 6", "30 words", VOCAB[6]),
-  v7: vocabQuiz("Stage 7", "29 words", VOCAB[7]),
-  v8: vocabQuiz("Stage 8", "46 words", VOCAB[8]),
-  vall: vocabQuiz("All Stages (1–8)", "", [].concat(VOCAB[1],VOCAB[2],VOCAB[3],VOCAB[4],VOCAB[5],VOCAB[6],VOCAB[7],VOCAB[8]))
-};
-DATA.vall.sub = DATA.vall.pairs.length + " words";
-
-const GROUPS = [
-  { label:"Nouns",    ids:["puella","amicus","templum","mercator","nomen"] },
-  { label:"Verbs",    ids:["future","irregular","compounds","conj1","conj2","conj3","conj4"] },
-  { label:"Pronouns", ids:["personal","relative","hic","ille"] },
-  { label:"People", ids:[] },
-  { label:"Vocab", ids:["v1","v2","v3","v4","v5","v6","v7","v8","vall"] }
-];
-
-// ~15s per form, min 3:00, max 45:00
-const quizTime = n => Math.min(2700, Math.max(180, n * 15));
-function resolveTime(n){
-  if ((activeGroup === "Vocab" || activeGroup === "People") && vocabTime !== "auto")
-    return vocabTime === "none" ? null : parseInt(vocabTime, 10);
-  return quizTime(n);
+const N=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const $=id=>document.getElementById(id);
+const stemOf=(t,c)=>Array.isArray(t.stem)?t.stem[c]:t.stem;
+const lit=v=>v[0]==="=",txt=v=>lit(v)?v.slice(1):v;
+let cur,mode="ref",flip=false,S=null;
+function nav(){let h="",sec="";T.forEach(t=>{if(t.sec!==sec){sec=t.sec;h+=`<h3>${sec}</h3>`}h+=`<a href="#${t.id}" data-id="${t.id}">${t.title}</a>`});$("nav").innerHTML=h}
+function best(id){try{return JSON.parse(localStorage.getItem("best-"+id))}catch(e){return null}}
+function save(id,v){try{localStorage.setItem("best-"+id,JSON.stringify(v))}catch(e){}}
+const fmt=s=>Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
+function show(){
+  stop();const id=location.hash.slice(1);cur=T.find(t=>t.id===id)||T[0];
+  document.querySelectorAll("nav a").forEach(a=>a.classList.toggle("on",a.dataset.id===cur.id));
+  mode="ref";flip=false;render();
 }
-function timeLeft(){ return noTimer ? `in ${fmt(secs)}` : `with ${fmt(Math.max(secs,0))} left`; }
-
-let current = "puella";
-let total = 10;
-let playing = false, learning = false;
-let filled = [], score = 0, secs = 180, timerId = null;
-let selCh = new Set([1]);
-let tq = null;
-let vocabMode = "mc";
-let vocabTime = "auto";
-let noTimer = false;
-let mcActive = false, mc = null;
-const TOTALV = [1,2,3,4,5,6,7,8].reduce((a,c)=>a+VOCAB[c].length,0);
-
-const $ = id => document.getElementById(id);
-const norm = s => s.trim().toLowerCase().replace(/ā/g,"a").replace(/ē/g,"e").replace(/ī/g,"i").replace(/ō/g,"o").replace(/ū/g,"u");
-const splitAlt = a => [norm(a), ...norm(a).split(",").map(s=>s.trim()).filter(Boolean)];
-const fmt = s => `${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
-
-// group switcher + quiz picker (only the active group's quizzes shown)
-let activeGroup = GROUPS[0].label;
-GROUPS.forEach(g => {
-  const b = document.createElement("button");
-  b.className = "gbtn";
-  b.textContent = g.label;
-  b.dataset.group = g.label;
-  b.onclick = () => {
-    if (g.label === activeGroup) return;
-    stopGame();
-    activeGroup = g.label;
-    renderGroupbar();
-    renderQuizTabs();
-    if (g.label === "Vocab") selectVocab(); else if (g.label === "People") selectPeople(); else select(g.ids[0]);
-  };
-  $("groupseg").appendChild(b);
+function stop(){if(S&&S.iv)clearInterval(S.iv);S=null}
+function render(){
+  const t=cur,b=best(t.id);
+  let h=`<h2>${t.title}</h2><div class="sec">${t.sec}${b?` · best ${b.s}/${b.n} in ${fmt(b.t)}`:""}</div>
+  <div class="bar"><button class="${mode==="ref"?"":"alt"}" data-m="ref">Reference</button><button class="${mode==="quiz"?"":"alt"}" data-m="quiz">Quiz</button>${mode==="quiz"&&t.flip?`<button class="alt" id="flip">Flip direction</button>`:""}</div>`;
+  if(mode==="ref"){h+=`<div class="sc">${refTable(t)}</div>`}
+  else{h+=`<div class="stat" id="stat"><div><small>Score</small><b id="sc">0/${count(t)}</b></div><div><small>Time</small><b id="tm">${fmt(limit(t))}</b></div><button class="go" id="start">Start Quiz</button><button class="alt" id="give" style="display:none">Give Up</button></div><div class="hint" id="hint">Fill in every blank${t.stem?" — the stem is shown, type only the ending":""}. Correct answers lock in automatically. ${t.rows.some(r=>r.some(c=>c.includes("/")))?"Where several answers are shown separated by “/”, any one of them is accepted.":""}</div><div id="res"></div><div class="sc">${quizTable(t)}</div>`}
+  $("main").innerHTML=h;
+}
+const count=t=>{let n=0;view(t).rows.forEach(r=>r.slice(1).forEach(c=>{if(c!=="—")n++}));return n};
+const limit=t=>Math.max(60,count(t)*6);
+function view(t){if(flip&&t.flip)return{hd:[t.hd[1],t.hd[0]],rows:t.rows.map(r=>[r[1],r[0]]),stem:null};return{hd:t.hd,rows:t.rows,stem:t.stem}}
+function refTable(t){
+  let h="<table><thead><tr>"+t.hd.map(x=>`<th>${x}</th>`).join("")+"</tr></thead><tbody>";
+  t.rows.forEach(r=>{h+=`<tr><th>${r[0]}</th>`+r.slice(1).map((v,i)=>{const s=stemOf(t,i);return `<td>${s&&!lit(v)?`<span class="s">${s}-</span><b>${v}</b>`:txt(v)}</td>`}).join("")+"</tr>"});
+  return h+"</tbody></table>";
+}
+function quizTable(t){
+  const v=view(t);
+  let h="<table id=\"qt\"><thead><tr>"+v.hd.map(x=>`<th>${x}</th>`).join("")+"</tr></thead><tbody>";
+  v.rows.forEach(r=>{h+=`<tr><th>${r[0]}</th>`+r.slice(1).map((c,i)=>{
+    if(c==="—")return "<td>—</td>";
+    const s=v.stem?stemOf({stem:v.stem},i):null,e=txt(c);
+    return `<td>${s&&!lit(c)?`<span class="s">${s}-</span>`:""}<input disabled autocomplete="off" autocapitalize="none" spellcheck="false" data-a="${e.replace(/"/g,"&quot;")}"></td>`}).join("")+"</tr>"});
+  return h+"</tbody></table>";
+}
+function start(){
+  const t=cur,n=count(t);
+  S={n,s:0,t0:Date.now(),lim:limit(t)};
+  document.querySelectorAll("#qt input").forEach(i=>{i.disabled=false});
+  const f=document.querySelector("#qt input");if(f)f.focus();
+  $("start").style.display="none";$("give").style.display="";
+  S.iv=setInterval(()=>{const left=S.lim-(Date.now()-S.t0)/1000;$("tm").textContent=fmt(Math.max(0,left));if(left<=0)finish("Time’s up!")},250);
+}
+function finish(msg){
+  if(!S)return;clearInterval(S.iv);
+  const el=Math.min(S.lim,(Date.now()-S.t0)/1000),{s,n}=S;
+  document.querySelectorAll("#qt input").forEach(i=>{i.disabled=true;if(!i.classList.contains("ok")){i.value=i.dataset.a.split("/")[0]===i.dataset.a?i.dataset.a:i.dataset.a;i.classList.add("miss")}});
+  const b=best(cur.id);if(!b||s>b.s||(s===b.s&&el<b.t))save(cur.id,{s,n,t:Math.round(el)});
+  $("res").innerHTML=`<div class="res"><b>${msg}</b> You got ${s} of ${n} (${Math.round(100*s/n)}%) in ${fmt(el)}.${s===n?" Perfect! 🏛️":" Missed answers are shown in red."}</div>`;
+  $("give").style.display="none";$("start").style.display="";$("start").textContent="Play again";
+  S=null;
+}
+function onInput(e){
+  const i=e.target;if(!S||!i.matches("#qt input")||i.disabled)return;
+  const a=i.dataset.a,ok=[...a.split("/"),a].map(N).filter(Boolean);
+  if(ok.includes(N(i.value))){
+    i.value=a;i.classList.add("ok");i.disabled=true;S.s++;$("sc").textContent=S.s+"/"+S.n;
+    const all=[...document.querySelectorAll("#qt input")],nx=all.slice(all.indexOf(i)+1).find(x=>!x.disabled)||all.find(x=>!x.disabled);
+    if(nx)nx.focus();
+    if(S.s===S.n)finish("Finished!");
+  }
+}
+document.addEventListener("click",e=>{
+  const m=e.target.dataset&&e.target.dataset.m;
+  if(m){stop();mode=m;render();return}
+  if(e.target.id==="flip"){stop();flip=!flip;render();return}
+  if(e.target.id==="start"){if(mode==="quiz"){render();start()}}
+  if(e.target.id==="give")finish("Gave up.");
 });
-function renderGroupbar(){
-  document.querySelectorAll("#groupseg .gbtn").forEach(b => b.classList.toggle("active", b.dataset.group === activeGroup));
-}
-function renderVocabSetup(){
-  $("tabs").innerHTML = `<div class="vsetup">
-    <div class="vlabel">Choose Chapters</div>
-    <div class="chips" id="chchips"></div>
-    <div class="vlabel">Mode</div>
-    <select class="vmodesel" id="vocabMode">
-      <option value="mc">Multiple choice</option>
-      <option value="type">Type-in</option>
-    </select>
-    <div class="vlabel">Time</div>
-    <select class="vmodesel" id="vocabTime">
-      <option value="auto">Auto</option>
-      <option value="300">5:00</option>
-      <option value="600">10:00</option>
-      <option value="1200">20:00</option>
-      <option value="2700">45:00</option>
-      <option value="none">No limit</option>
-    </select>
-  </div>`;
-  const cc = $("chchips");
-  for (let c = 1; c <= 8; c++){
-    const b = document.createElement("button");
-    b.className = "chip" + (selCh.has(c) ? " on" : "");
-    b.innerHTML = `Chapter ${c} <small>${VOCAB[c].length}</small>`;
-    b.onclick = () => toggleChapter(c);
-    cc.appendChild(b);
-  }
-  const all = document.createElement("button");
-  all.className = "chip" + (selCh.size === 8 ? " on" : "");
-  all.innerHTML = `All <small>${TOTALV}</small>`;
-  all.onclick = toggleAllChapters;
-  cc.appendChild(all);
-  $("vocabMode").value = vocabMode;
-  $("vocabMode").onchange = e => { vocabMode = e.target.value; updateDirVisibility(); };
-  $("vocabTime").value = vocabTime;
-  $("vocabTime").onchange = e => { vocabTime = e.target.value; if (!playing) selectVocab(); };
-}
-function toggleChapter(c){
-  if (playing) return;
-  if (selCh.has(c)) selCh.delete(c); else selCh.add(c);
-  if (!selCh.size) selCh.add(c);
-  renderQuizTabs();
-  selectVocab();
-}
-function toggleAllChapters(){
-  if (playing) return;
-  selCh = new Set([1,2,3,4,5,6,7,8]);
-  renderQuizTabs();
-  selectVocab();
-}
-function renderPeopleSetup(){
-  $("tabs").innerHTML = `<div class="vsetup">
-    <div class="vlabel">English → Latin · Multiple choice</div>
-    <div class="vlabel">Time</div>
-    <select class="vmodesel" id="vocabTime">
-      <option value="auto">Auto</option>
-      <option value="300">5:00</option>
-      <option value="600">10:00</option>
-      <option value="1200">20:00</option>
-      <option value="2700">45:00</option>
-      <option value="none">No limit</option>
-    </select>
-    <label class="chip"><input type="checkbox" id="forcedOrder"> Forced order</label>
-  </div>`;
-  $("vocabTime").value = vocabTime;
-  $("vocabTime").onchange = e => { vocabTime = e.target.value; if (!playing) selectPeople(); };
-  $("forcedOrder").onchange = e => { forcedOrder = e.target.checked; if (!playing) selectPeople(); };
-}
-function renderQuizTabs(){
-  if (activeGroup === "Vocab"){ renderVocabSetup(); return; }
-  if (activeGroup === "People"){ renderPeopleSetup(); return; }
-  $("tabs").innerHTML = "";
-  GROUPS.find(x => x.label === activeGroup).ids.forEach(k => {
-    const b = document.createElement("button");
-    b.className = "tab";
-    b.innerHTML = `<span class="t">${DATA[k].title}</span><span class="s">${DATA[k].sub}</span>`;
-    b.dataset.quiz = k;
-    b.onclick = () => { stopGame(); select(k); };
-    $("tabs").appendChild(b);
-  });
-}
-
-function select(k){
-  current = k;
-  if (DATA[k].vocab) applyDir(DATA[k]);
-  total = DATA[k].hints.length;
-  $("orderrow").style.display = "none";
-  updateHeroLabels();
-  document.querySelectorAll("#tabs button.tab").forEach(b => b.classList.toggle("active", b.dataset.quiz === k));
-  learning = false; $("learnBtn").classList.remove("active");
-  resetGrid();
-}
-function resetGrid(){
-  stopTimer(); playing = false;
-  filled = Array(total).fill(false); score = 0;
-  { const lim = resolveTime(total); secs = 0; $("timer").textContent = lim === null ? "00:00" : fmt(lim); }
-  $("score").textContent = `0/${total}`;
-  $("playBtn").disabled = false; updateHeroLabels();
-  $("answerWrap").style.display = "none"; $("giveupRow").style.display = "none";
-  $("tabs").classList.remove("locked");
-  $("hint").className = ""; $("hint").textContent = "";
-  renderGrid();
-}
-function renderGrid(){
-  const d = DATA[current];
-  if (d.rows) renderMatrix(d); else renderList(d);
-  updateNowQ();
-}
-function updateNowQ(){
-  const el = $("nowQ");
-  if (!playing){ el.style.display = "none"; return; }
-  const d = DATA[current];
-  const remaining = filled.filter(f => f !== true).length;
-  if (remaining === 0){ el.style.display = "none"; return; }
-  if (d.vocab && tq && tq.pos < tq.order.length){
-    el.style.display = "block";
-    el.innerHTML = `${escapeHtml(d.hints[tq.order[tq.pos]])} <span class="qarrow">→ ?</span>`;
-  } else {
-    el.style.display = "none";
-  }
-}
-function gridListHTML(d){
-  const nx = -1;
-  const leftH = d.vocab ? (vocabDir === "la-en" ? "Latin" : "English word") : "Hint";
-  const rightH = d.vocab ? (vocabDir === "la-en" ? "English word" : "Latin") : d.title;
-  let html = `<table class="sheet"><tr><th style="width:40%">${leftH}</th><th style="width:60%">${rightH}</th></tr><tbody>`;
-  d.hints.forEach((h,i) => {
-    let cls = "answercell", txt = "";
-    if (learning) { txt = d.answers[i]; }
-    else if (playing && filled[i]) { cls += " filled"; txt = d.answers[i]; }
-    else if (!playing && filled[i] === "missed") { cls += " missed"; txt = d.answers[i]; }
-    else if (playing && i === nx) { cls += " next"; }
-    html += `<tr><td class="hintcell">${h}</td><td class="${cls}"><span class="celltext">${txt}</span></td></tr>`;
-  });
-  return html + `</tbody></table>`;
-}
-function renderList(d){
-  if (playing && !learning && d.vocab){ $("tablewrap").innerHTML = ""; return; }
-  $("tablewrap").innerHTML = gridListHTML(d);
-}
-function renderMatrix(d){
-  const C = d.cols.length;
-  const nx = -1;
-  let html = `<table class="sheet grid"><tr><th colspan="${C+1}">${d.title}</th></tr>`;
-  if (d.colGroups) {
-    const runs = [];
-    d.colGroups.forEach((g,i)=>{ if (i && g === d.colGroups[i-1]) runs[runs.length-1].span++; else runs.push({g, span:1}); });
-    html += `<tr><td class="corner">${d.groupCorner}</td>` + runs.map(r=>`<th class="colhead" colspan="${r.span}">${r.g}</th>`).join("") + `</tr>`;
-  }
-  html += `<tr><td class="corner">${d.corner}</td>` + d.cols.map(c=>`<th class="colhead">${c}</th>`).join("") + `</tr>`;
-  d.rows.forEach((r,i)=>{
-    html += `<tr><td class="rowhead">${r}</td>`;
-    d.cols.forEach((c,j)=>{
-      const f = i*C+j;
-      let cls = "mcell", ans = "";
-      if (learning) { ans = d.matrix[i][j]; }
-      else if (playing && filled[f]) { cls += " filled"; ans = d.matrix[i][j]; }
-      else if (!playing && filled[f] === "missed") { cls += " missed"; ans = d.matrix[i][j]; }
-      else if (playing && f === nx) { cls += " next"; }
-      html += `<td class="${cls}"><span class="cellans">${ans}</span></td>`;
-    });
-    html += `</tr>`;
-  });
-  $("tablewrap").innerHTML = html + `</table>`;
-}
-
-function startGridGame(){
-  learning = false; $("learnBtn").classList.remove("active");
-  $("tabs").classList.add("locked");
-  filled = Array(total).fill(false); score = 0;
-  if (DATA[current].vocab){
-    const o = DATA[current].hints.map((_,i)=>i);
-    shuffleInPlace(o);
-    tq = { order:o, pos:0 };
-  } else tq = null;
-  { const lim = resolveTime(total); noTimer = (lim === null); secs = noTimer ? 0 : lim; }
-  playing = true;
-  $("playBtn").disabled = true; $("playBtn").textContent = playBusyLabel();
-  $("answerWrap").style.display = "block"; $("giveupRow").style.display = DATA[current].vocab ? "none" : "flex";
-  const inp = $("answer"); inp.disabled = false; inp.value = "";
-  $("submitBtn").disabled = false;
-  $("skipBtn").style.display = DATA[current].vocab ? "" : "none";
-  $("hint").className = ""; $("hint").textContent = "";
-  $("score").textContent = `0/${total}`;
-  renderGrid(); tick();
-  timerId = setInterval(tick, 1000);
-  inp.focus();
-}
-function stopTimer(){ if (timerId) clearInterval(timerId); timerId = null; }
-function tick(){
-  if (noTimer){ secs++; $("timer").textContent = fmt(secs); return; }
-  $("timer").textContent = fmt(secs);
-  if (secs <= 0) { mcActive ? endMC(false, false) : endGame(false); return; }
-  secs--;
-}
-function missedTableHTML(d, idxs){
-  if (!idxs.length) return "";
-  let html = `<table class="sheet missed-only"><tr><th style="width:40%">Missed</th><th style="width:60%">Answer</th></tr><tbody>`;
-  idxs.forEach(i=>{
-    html += `<tr><td class="hintcell">${d.hints[i]}</td><td class="answercell missed"><span class="celltext">${d.answers[i]}</span></td></tr>`;
-  });
-  return html + `</tbody></table>`;
-}
-function endGame(won, silent){
-  stopTimer(); playing = false;
-  $("nowQ").style.display = "none";
-  $("answer").disabled = true; $("submitBtn").disabled = true;
-  $("playBtn").disabled = false; updateHeroLabels();
-  $("giveupRow").style.display = "none";
-  $("tabs").classList.remove("locked");
-  if (!silent) {
-    const missedIdx = filled.map((f,i) => f === true ? null : i).filter(x => x !== null);
-    $("timer").textContent = fmt(Math.max(secs,0));
-    $("tablewrap").innerHTML = missedTableHTML(DATA[current], missedIdx);
-    $("hint").className = won ? "good" : "";
-    $("hint").textContent = won ? `🏆 Perfect! ${total}/${total} ${timeLeft()}!` : `Time! You got ${score}/${total} — missed answers below.`;
-  }
-}
-$("playBtn").onclick = () => {
-  if (activeGroup === "Vocab") {
-    buildCustom();
-    if (vocabMode === "mc") startMC();
-    else { current = "vcustom"; startGridGame(); }
-  } else if (activeGroup === "People") startMC();
-  else startGridGame();
-};
-$("giveup").onclick = () => { if (mcActive) endMC(false, false); else endGame(false); };
-$("learnBtn").onclick = () => {
-  stopGame();
-  learning = !learning;
-  $("learnBtn").classList.toggle("active", learning);
-  resetGridSilent();
-  if (learning) { renderGrid(); $("hint").textContent = "Study mode — answers shown. Hit PLAY QUIZ when ready."; }
-};
-function resetGridSilent(){
-  stopTimer(); playing = false;
-  filled = Array(total).fill(false); score = 0;
-  { const lim = resolveTime(total); secs = 0; $("timer").textContent = lim === null ? "00:00" : fmt(lim); }
-  $("score").textContent = `0/${total}`;
-  $("playBtn").disabled = false; updateHeroLabels();
-  $("answerWrap").style.display = "none"; $("giveupRow").style.display = "none";
-  $("tabs").classList.remove("locked");
-  if (!learning) { $("hint").className = ""; $("hint").textContent = ""; }
-  renderGrid();
-}
-// (forced order removed — all quizzes accept answers in any order)
-$("dirToggle").onclick = () => {
-  vocabDir = vocabDir === "la-en" ? "en-la" : "la-en";
-  $("dirState").textContent = vocabDir === "la-en" ? "Latin → English" : "English → Latin";
-  if (playing) endGame(false, true);
-  learning = false; $("learnBtn").classList.remove("active");
-  applyDir(DATA[current]);
-  resetGrid();
-};
-
-// submit with Enter (or the Submit button) — nothing is checked while typing
-function submitAnswer(){
-  if (!playing) return;
-  const inp = $("answer");
-  const raw = inp.value.trim(), v = norm(raw);
-  if (!v) { $("hint").className = "bad"; $("hint").textContent = "Type something first, then press Enter!"; return; }
-  const d = DATA[current];
-  if (d.vocab && tq && tq.pos < tq.order.length){
-    const i = tq.order[tq.pos];
-    if (splitAlt(d.answers[i]).includes(v)){
-      filled[i] = true; score++;
-      inp.value = "";
-      $("score").textContent = `${score}/${total}`;
-      $("hint").className = "good"; $("hint").textContent = `✅ ${d.answers[i]}`;
-      tq.pos++;
-      renderGrid();
-      if (score === total) endGame(true);
-    } else {
-      $("hint").className = "bad"; $("hint").textContent = `❌ Not quite — try again.`;
-    }
-    return;
-  }
-  {
-    const i = d.answers.findIndex((a,idx) => filled[idx] !== true && splitAlt(a).includes(v));
-    if (i !== -1) {
-      filled[i] = true; score++;
-      inp.value = "";
-      $("score").textContent = `${score}/${total}`;
-      $("hint").className = "good"; $("hint").textContent = `✅ ${d.answers[i]}`;
-      renderGrid();
-      if (score === total) endGame(true);
-    } else {
-      $("hint").className = "bad"; $("hint").textContent = `❌ "${raw}" isn't a remaining answer — try again.`;
-    }
-  }
-}
-$("answer").addEventListener("keydown", e => {
-  if (e.key === "Enter") { e.preventDefault(); submitAnswer(); }
-});
-$("submitBtn").onclick = submitAnswer;
-$("skipBtn").onclick = () => {
-  if (!playing || !tq || tq.pos >= tq.order.length) return;
-  const d = DATA[current];
-  const i = tq.order[tq.pos];
-  tq.order.push(i); tq.pos++;
-  $("answer").value = "";
-  $("hint").className = ""; $("hint").textContent = `Skipped — ${d.hints[i]} = ${d.answers[i]}`;
-  renderGrid();
-};
-
-// ---------- custom vocab tester ----------
-DATA.vcustom = { title:"Vocab", sub:"", vocab:true, pairs:[], hints:[], answers:[] };
-function playIdleLabel(){ return (activeGroup === "Vocab" || activeGroup === "People") ? "START TEST" : "PLAY QUIZ"; }
-function playBusyLabel(){ return (activeGroup === "Vocab" || activeGroup === "People") ? "TESTING…" : "PLAYING…"; }
-function updateHeroLabels(){
-  if (!playing) $("playBtn").textContent = playIdleLabel();
-  $("learnBtn").textContent = (activeGroup === "Vocab" || activeGroup === "People") ? "Show All Answers" : "🎓 Learn";
-}
-function stopGame(){ if (!playing) return; if (mcActive) endMC(false, true); else endGame(false, true); }
-function shuffleInPlace(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } }
-function escapeHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-function buildCustom(){
-  const ids = [...selCh].sort((a,b)=>a-b);
-  let pairs = [];
-  ids.forEach(c => pairs = pairs.concat(VOCAB[c]));
-  const label = ids.length === 8 ? "Stages 1–8" : "Stage" + (ids.length > 1 ? "s " : " ") + ids.join(", ");
-  DATA.vcustom.title = "Vocab — " + label;
-  DATA.vcustom.pairs = pairs;
-  applyDir(DATA.vcustom);
-  current = "vcustom"; total = pairs.length;
-}
-function updateDirVisibility(){
-  $("orderrow").style.display = (activeGroup === "Vocab" && vocabMode !== "mc" || activeGroup === "People" && forcedOrder) ? "" : "none";
-}
-function selectVocab(){
-  learning = false; $("learnBtn").classList.remove("active");
-  buildCustom();
-  updateDirVisibility();
-  updateHeroLabels();
-  resetGrid();
-}
-function selectPeople(){
-  learning = false; $("learnBtn").classList.remove("active");
-  vocabMode = "mc";
-  DATA.vcustom.title = "People";
-  DATA.vcustom.pairs = VOCAB[9];
-  applyDir(DATA.vcustom);
-  current = "vcustom"; total = DATA.vcustom.pairs.length;
-  $("orderrow").style.display = "none";
-  updateHeroLabels();
-  resetGrid();
-  forcedOrder = $("forcedOrder")?.checked || false;
-}
-function startMC(){
-  learning = false; $("learnBtn").classList.remove("active");
-  const order = forcedOrder ? DATA.vcustom.pairs.map((_,i)=>i) : shuffleInPlace(DATA.vcustom.pairs.map((_,i)=>i));
-  mc = { order, pos:0, score:0, mistakes:0, total:order.length, answered:false, opts:[], correct:"", prompt:"", pair:0 };
-  total = mc.total; score = 0; filled = Array(total).fill(false);
-  { const lim = resolveTime(total); noTimer = (lim === null); secs = noTimer ? 0 : lim; }
-  playing = true; mcActive = true;
-  $("tabs").classList.add("locked");
-  $("playBtn").disabled = true; $("playBtn").textContent = playBusyLabel();
-  $("answerWrap").style.display = "none"; $("giveupRow").style.display = "none";
-  $("hint").className = ""; $("hint").textContent = "Pick the right answer!";
-  $("nowQ").style.display = "none";
-  $("score").textContent = `0/${total}`;
-  tick();
-  timerId = setInterval(tick, 1000);
-  renderMC();
-}
-function renderMC(){
-  const d = DATA.vcustom;
-  const i = mc.order[mc.pos];
-  const prompt = d.pairs[i][1];
-  const correct = d.pairs[i][0];
-  const pool = [];
-  d.pairs.forEach((p,j)=>{ if (j !== i){ const v = p[0]; if (v !== correct && !pool.includes(v)) pool.push(v); } });
-  shuffleInPlace(pool);
-  mc.opts = [correct, ...pool.slice(0,3)];
-  shuffleInPlace(mc.opts);
-  mc.correct = correct; mc.prompt = prompt; mc.pair = i; mc.answered = false;
-  $("tablewrap").innerHTML = `<div class="mcq">${escapeHtml(prompt)}</div>
-  <div class="mcopts">${mc.opts.map((o,k)=>`<button class="mcopt" onclick="answerMC(${k})">${escapeHtml(o)}</button>`).join("")}</div>`;
-}
-function answerMC(k){
-  if (!playing || !mcActive || mc.answered) return;
-  mc.answered = true;
-  const btns = document.querySelectorAll("#tablewrap .mcopt");
-  const ok = mc.opts[k] === mc.correct;
-  btns.forEach((b,bi)=>{ b.disabled = true; if (mc.opts[bi] === mc.correct) b.classList.add("right"); });
-  if (ok){
-    filled[mc.pair] = true;
-    mc.score++; score = mc.score;
-    $("score").textContent = `${score}/${total}`;
-    $("hint").className = "good"; $("hint").textContent = "✅ Correct!";
-  } else {
-    btns[k].classList.add("wrong");
-    mc.mistakes++;
-    mc.order.push(mc.pair);
-    $("hint").className = "bad"; $("hint").textContent = `❌ Correct: ${mc.correct} — it'll come back!`;
-  }
-  setTimeout(()=>{
-    if (!playing || !mcActive) return;
-    if (forcedOrder) mc.pos++;
-    else { mc.pos++; while (mc.pos < mc.order.length && filled[mc.order[mc.pos]]) mc.pos++; }
-    if (mc.pos >= mc.order.length) endMC(true, false);
-    else renderMC();
-  }, ok ? 850 : 1600);
-}
-function endMC(finished, silent){
-  stopTimer(); playing = false; mcActive = false;
-  $("nowQ").style.display = "none";
-  $("playBtn").disabled = false; updateHeroLabels();
-  $("giveupRow").style.display = "none";
-  $("tabs").classList.remove("locked");
-  if (silent) return;
-  const m = mc.mistakes;
-  $("timer").textContent = fmt(Math.max(secs,0));
-  $("hint").className = "good";
-  $("hint").textContent = `🏆 Done! ${mc.total}/${mc.total} ${timeLeft()}${m ? ` · ${m} mistake${m === 1 ? "" : "s"}` : " · flawless"}!`;
-  $("tablewrap").innerHTML = `<div class="btnrow"><button onclick="startMC()">Retry Test</button></div>`;
-}
-renderGroupbar();
-renderQuizTabs();
-select("puella");
+document.addEventListener("input",onInput);
+window.addEventListener("hashchange",show);
+nav();show();
 </script>
 </body>
 </html>
