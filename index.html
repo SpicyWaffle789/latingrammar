@@ -11,26 +11,26 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{background:var(--hd);color:var(--hdfg);padding:14px 20px}
-header h1{margin:0;font-size:1.35rem}header p{margin:2px 0 0;opacity:.85;font-size:.9rem}
-.wrap{display:grid;grid-template-columns:250px 1fr;gap:20px;max-width:1200px;margin:0 auto;padding:16px}
-nav h3{margin:14px 0 4px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+header{max-width:1200px;margin:0 auto;padding:22px 16px 0}
+header h1{margin:0;font-size:1.3rem;font-weight:700}header p{margin:2px 0 0;color:var(--mut);font-size:.88rem}
+.wrap{display:grid;grid-template-columns:210px 1fr;gap:32px;max-width:1200px;margin:0 auto;padding:20px 16px}
+nav h3{margin:22px 0 6px 10px;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);opacity:.75}
 nav h3:first-child{margin-top:0}
-nav a{display:block;padding:6px 10px;border-radius:6px;color:var(--fg);text-decoration:none;font-size:.93rem}
-nav a:hover{background:var(--card)}nav a.on{background:var(--hd);color:var(--hdfg)}
+nav a{display:block;padding:5px 10px;border-left:2px solid transparent;color:var(--mut);text-decoration:none;font-size:.9rem}
+nav a:hover{color:var(--fg)}nav a.on{border-left-color:var(--ac);color:var(--fg);font-weight:600}
 main{min-width:0}
 main h2{margin:0 0 2px}.sec{color:var(--mut);font-size:.85rem;margin-bottom:12px}
 .bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
-button{font:inherit;border:0;border-radius:6px;padding:8px 16px;cursor:pointer;background:var(--hd);color:#fff;font-weight:600}
+button{font:inherit;font-size:.9rem;border:0;border-radius:6px;padding:7px 14px;cursor:pointer;background:var(--hd);color:#fff;font-weight:600}
 button.go{background:var(--ac);font-size:1.05rem;padding:10px 26px}button.alt{background:var(--card);color:var(--fg);border:1px solid var(--bd)}
-.stat{display:flex;gap:18px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:8px 16px;margin:10px 0}
+.stat{display:flex;gap:28px;align-items:center;padding:8px 0;margin:6px 0}
 .stat b{font-size:1.5rem;font-variant-numeric:tabular-nums}.stat small{display:block;color:var(--mut);font-size:.72rem;text-transform:uppercase}
 .sc{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:.95rem}
-th,td{border:1px solid var(--bd);padding:6px 10px;text-align:left;white-space:nowrap}
-thead th{background:var(--hd);color:var(--hdfg)}tbody th{background:var(--card);font-weight:600}
+th,td{border-bottom:1px solid var(--bd);padding:9px 12px;text-align:left;white-space:nowrap}
+thead th{color:var(--mut);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid var(--fg)}tbody th{font-weight:500;color:var(--mut)}
 .s{color:var(--mut)}td b{color:var(--ok-c,#2a7d3f)}
-td input{font:inherit;width:8.5em;padding:4px 6px;border:1px solid var(--bd);border-radius:4px;background:var(--in);color:var(--fg)}
+td input{font:inherit;width:8em;padding:4px 8px;border:0;border-bottom:1px solid var(--mut);border-radius:0;background:transparent;color:var(--fg);outline:0}td input:focus{border-bottom-color:var(--ac)}
 td input.ok{background:var(--ok);color:var(--okfg);font-weight:600}td input.miss{background:var(--bad);color:var(--badfg)}
 .res{background:var(--card);border-left:5px solid var(--ac);padding:12px 16px;margin:12px 0;border-radius:6px}
 .hint{color:var(--mut);font-size:.85rem}
@@ -38,7 +38,7 @@ td input.ok{background:var(--ok);color:var(--okfg);font-weight:600}td input.miss
 </style>
 </head>
 <body>
-<header><h1>Latin Reference Grammar · Quiz Lab</h1><p>Every table from pages 213–228, each with a timed type-in quiz. Typing without macrons works (amo = amō).</p></header>
+<header><h1>Latin Grammar Quizzes</h1><p>Macrons optional: amo = amō</p></header>
 <div class="wrap"><nav id="nav"></nav><main id="main"></main></div>
 <script>
 const P6=["I","you (sg)","he / she / it","we","you (pl)","they"],
@@ -245,7 +245,7 @@ function render(){
   let h=`<h2>${t.title}</h2><div class="sec">${t.sec}${b?` · best ${b.s}/${b.n} in ${fmt(b.t)}`:""}</div>
   <div class="bar"><button class="${mode==="ref"?"":"alt"}" data-m="ref">Reference</button><button class="${mode==="quiz"?"":"alt"}" data-m="quiz">Quiz</button>${mode==="quiz"&&t.flip?`<button class="alt" id="flip">Flip direction</button>`:""}</div>`;
   if(mode==="ref"){h+=`<div class="sc">${refTable(t)}</div>`}
-  else{h+=`<div class="stat" id="stat"><div><small>Score</small><b id="sc">0/${count(t)}</b></div><div><small>Time</small><b id="tm">${fmt(limit(t))}</b></div><button class="go" id="start">Start Quiz</button><button class="alt" id="give" style="display:none">Give Up</button></div><div class="hint" id="hint">Fill in every blank${t.stem?" — the stem is shown, type only the ending":""}. Correct answers lock in automatically. ${t.rows.some(r=>r.some(c=>c.includes("/")))?"Where several answers are shown separated by “/”, any one of them is accepted.":""}</div><div id="res"></div><div class="sc">${quizTable(t)}</div>`}
+  else{h+=`<div class="stat" id="stat"><div><small>Score</small><b id="sc">0/${count(t)}</b></div><div><small>Time</small><b id="tm">${fmt(limit(t))}</b></div><button class="go" id="start">Start Quiz</button><button class="alt" id="give" style="display:none">Give Up</button></div><div class="hint" id="hint">${t.stem?"Type only the ending. ":""}${t.rows.some(r=>r.some(c=>c.includes("/")))?"Any one answer separated by “/” is accepted.":""}</div><div id="res"></div><div class="sc">${quizTable(t)}</div>`}
   $("main").innerHTML=h;
 }
 const count=t=>{let n=0;view(t).rows.forEach(r=>r.slice(1).forEach(c=>{if(c!=="—")n++}));return n};
